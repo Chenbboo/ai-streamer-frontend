@@ -1,16 +1,16 @@
 <template>
-  <div class="app-container">
+  <div class="app-container live-upload-page">
     <!-- 每日提交 -->
     <el-card class="box-card" shadow="never">
       <template #header><b>每日提交</b></template>
-      <el-form :model="form" label-width="90px">
+      <el-form :model="form" label-width="90px" class="submit-form">
         <el-row :gutter="20">
-          <el-col :span="8">
+          <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="业务日期" required>
               <el-date-picker v-model="form.bizDate" type="date" value-format="YYYY-MM-DD" placeholder="数据属于哪一天" style="width: 100%" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="主播" required>
               <el-select v-model="form.streamerId" placeholder="选择主播" style="width: 100%">
                 <el-option v-for="s in streamers" :key="s.streamerId" :label="s.stageName" :value="s.streamerId" />
@@ -19,14 +19,14 @@
           </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="12">
+          <el-col :xs="24" :md="12">
             <el-form-item label="打赏榜截图">
               <el-upload ref="giftUploadRef" v-model:file-list="giftFiles" :auto-upload="false" multiple accept="image/*" list-type="picture-card">
                 <el-icon><Plus /></el-icon>
               </el-upload>
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :md="12">
             <el-form-item label="聊天截图">
               <el-upload ref="chatUploadRef" v-model:file-list="chatFiles" :auto-upload="false" multiple accept="image/*" list-type="picture-card">
                 <el-icon><Plus /></el-icon>
@@ -38,7 +38,7 @@
           <el-input v-model="form.rawText" type="textarea" :rows="2" placeholder="如:Zhenzhen Ngày 1/7 Tổng 27079" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="submitting" @click="handleSubmit">提 交</el-button>
+          <el-button class="submit-button" type="primary" :loading="submitting" @click="handleSubmit">提 交</el-button>
           <span class="tip">三项可分次提交,同一天自动归到一起</span>
         </el-form-item>
       </el-form>
@@ -46,7 +46,7 @@
 
     <!-- 查询 + 列表 -->
     <el-card class="box-card" shadow="never" style="margin-top: 12px">
-      <el-form :model="query" inline>
+      <el-form :model="query" inline class="query-form">
         <el-form-item label="日期">
           <el-date-picker v-model="dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="-" start-placeholder="开始" end-placeholder="结束" />
         </el-form-item>
@@ -69,7 +69,7 @@
       <el-tabs v-model="activeTab" @tab-change="handleQuery">
         <!-- 按日汇总 -->
         <el-tab-pane label="按日汇总" name="daily">
-          <el-table v-loading="loading" :data="dailyList">
+          <el-table v-loading="loading" :data="dailyList" class="desktop-table">
             <el-table-column label="日期" prop="bizDate" width="120" />
             <el-table-column label="主播" prop="stageName" width="140" />
             <el-table-column label="打赏榜截图" align="center">
@@ -88,12 +88,28 @@
               </template>
             </el-table-column>
           </el-table>
+          <div v-loading="loading" class="mobile-list">
+            <div v-for="row in dailyList" :key="row.bizDate + '-' + row.streamerId" class="mobile-record">
+              <div class="record-main">
+                <div>
+                  <div class="record-title">{{ row.stageName || '-' }}</div>
+                  <div class="record-subtitle">{{ row.bizDate }}</div>
+                </div>
+              </div>
+              <div class="record-tags">
+                <el-tag :type="row.giftCount > 0 ? 'success' : 'danger'">打赏榜 {{ row.giftCount > 0 ? row.giftCount + '张' : '未交' }}</el-tag>
+                <el-tag :type="row.chatCount > 0 ? 'success' : 'danger'">聊天 {{ row.chatCount > 0 ? row.chatCount + '张' : '未交' }}</el-tag>
+                <el-tag :type="row.reportCount > 0 ? 'success' : 'danger'">汇报 {{ row.reportCount > 0 ? '已交' : '未交' }}</el-tag>
+              </div>
+            </div>
+            <el-empty v-if="!loading && dailyList.length === 0" description="暂无提交记录" />
+          </div>
           <pagination v-show="dailyTotal > 0" v-model:page="query.pageNum" v-model:limit="query.pageSize" :total="dailyTotal" @pagination="loadDaily" />
         </el-tab-pane>
 
         <!-- 明细 -->
         <el-tab-pane label="明细列表" name="detail">
-          <el-table v-loading="loading" :data="detailList">
+          <el-table v-loading="loading" :data="detailList" class="desktop-table">
             <el-table-column label="内容" width="110" align="center">
               <template #default="{ row }">
                 <el-image v-if="row.filePath" :src="baseApi + row.filePath" :preview-src-list="[baseApi + row.filePath]" preview-teleported fit="cover" style="width: 80px; height: 80px" />
@@ -118,6 +134,24 @@
               </template>
             </el-table-column>
           </el-table>
+          <div v-loading="loading" class="mobile-list">
+            <div v-for="row in detailList" :key="row.uploadId" class="mobile-record">
+              <div class="record-main">
+                <el-image v-if="row.filePath" :src="baseApi + row.filePath" :preview-src-list="[baseApi + row.filePath]" preview-teleported fit="cover" class="record-thumb" />
+                <div v-else class="record-text-thumb">汇报</div>
+                <div class="record-content">
+                  <div class="record-title">{{ typeLabel(row.uploadType) }}</div>
+                  <div class="record-subtitle">{{ row.stageName || '-' }} · {{ row.bizDate }}</div>
+                  <div v-if="row.rawText" class="record-report">{{ row.rawText }}</div>
+                </div>
+              </div>
+              <div class="record-footer">
+                <el-tag :type="statusTag(row.aiStatus)">{{ statusLabel(row.aiStatus) }}</el-tag>
+                <el-button v-hasPermi="['live:upload:remove']" link type="danger" icon="Delete" @click="handleDelete(row)">删除</el-button>
+              </div>
+            </div>
+            <el-empty v-if="!loading && detailList.length === 0" description="暂无明细记录" />
+          </div>
           <pagination v-show="detailTotal > 0" v-model:page="query.pageNum" v-model:limit="query.pageSize" :total="detailTotal" @pagination="loadDetail" />
         </el-tab-pane>
       </el-tabs>
@@ -270,6 +304,10 @@ handleQuery()
 </script>
 
 <style scoped>
+.live-upload-page {
+  padding-bottom: 16px;
+}
+
 .tip {
   margin-left: 12px;
   color: #909399;
@@ -283,5 +321,160 @@ handleQuery()
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.mobile-list {
+  display: none;
+}
+
+.mobile-record {
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+.record-main {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.record-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.record-title {
+  color: #303133;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 22px;
+}
+
+.record-subtitle {
+  color: #909399;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.record-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.record-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.record-thumb,
+.record-text-thumb {
+  flex: 0 0 58px;
+  width: 58px;
+  height: 58px;
+  border-radius: 6px;
+}
+
+.record-text-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #409eff;
+  background: #ecf5ff;
+  font-size: 13px;
+}
+
+.record-report {
+  max-width: 100%;
+  color: #606266;
+  font-size: 13px;
+  line-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .live-upload-page {
+    padding: 8px;
+    padding-bottom: 72px;
+  }
+
+  .live-upload-page :deep(.el-card__body) {
+    padding: 12px;
+  }
+
+  .submit-form :deep(.el-form-item) {
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  .submit-form :deep(.el-form-item__label) {
+    display: block;
+    width: auto !important;
+    height: 22px;
+    line-height: 22px;
+    margin-bottom: 6px;
+    text-align: left;
+  }
+
+  .submit-form :deep(.el-form-item__content) {
+    margin-left: 0 !important;
+  }
+
+  .live-upload-page :deep(.el-upload--picture-card),
+  .live-upload-page :deep(.el-upload-list--picture-card .el-upload-list__item) {
+    width: 76px;
+    height: 76px;
+  }
+
+  .submit-button {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 20;
+    width: auto;
+    height: 44px;
+    font-size: 16px;
+    box-shadow: 0 8px 22px rgba(64, 158, 255, 0.28);
+  }
+
+  .tip {
+    display: block;
+    margin: 8px 0 0;
+    line-height: 18px;
+  }
+
+  .query-form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .query-form :deep(.el-form-item) {
+    display: block;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .query-form :deep(.el-form-item__content),
+  .query-form :deep(.el-date-editor),
+  .query-form :deep(.el-select) {
+    width: 100% !important;
+  }
+
+  .desktop-table {
+    display: none;
+  }
+
+  .mobile-list {
+    display: block;
+  }
 }
 </style>
