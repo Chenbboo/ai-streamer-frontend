@@ -1,132 +1,333 @@
 <template>
-  <div class="live-report-page">
-    <section class="report-header">
-      <div>
-        <div class="eyebrow">WEEKLY REPORT · 主播运营看板</div>
-        <h1>第{{ weekNo }}周内容情况</h1>
-        <p>{{ query.beginDate }} 至 {{ query.endDate }}</p>
+  <div class="report-page">
+    <!-- Header -->
+    <header class="report-header">
+      <div class="eyebrow">Weekly Report · 主播运营周报</div>
+      <h1>第{{ currentWeek }}周内容情况</h1>
+      <div class="period">数据截至{{ today }}</div>
+      <div class="meta-row">
+        <span class="chip">{{ streamers.length }}主播</span>
+        <span class="chip">本周 {{ fmt(overview.totalXu) }} 钻</span>
+        <span class="chip">月累计 {{ fmt(monthlyTotal) }} 钻</span>
       </div>
-      <el-form :model="query" inline class="filter-bar">
-        <el-form-item label="日期">
-          <el-date-picker
-            v-model="dateRange"
-            type="daterange"
-            value-format="YYYY-MM-DD"
-            range-separator="-"
-            start-placeholder="开始"
-            end-placeholder="结束"
-            @change="handleDateChange"
-          />
-        </el-form-item>
-        <el-form-item label="主播">
-          <el-select v-model="query.streamerId" placeholder="全部" clearable style="width: 150px" @change="loadData">
-            <el-option v-for="s in streamers" :key="s.streamerId" :label="s.stageName" :value="s.streamerId" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-    </section>
+    </header>
 
-    <main v-loading="loading" class="report-body">
-      <section class="overview-pills">
-        <span>主播 {{ overview.streamerCount || 0 }} 位</span>
-        <span>总流水 {{ formatNumber(overview.totalXu) }}</span>
-        <span>私信客户 {{ formatNumber(overview.chatCustomers) }}</span>
-      </section>
-
-      <section class="section-title">
-        <span>01 · 主播本周表现</span>
-      </section>
-      <div class="streamer-grid">
-        <article v-for="card in cards" :key="card.streamerId" class="streamer-card" :class="card.health">
-          <div class="card-top">
-            <strong>{{ card.stageName }}</strong>
-            <el-tag :type="healthTag(card.health)" effect="dark" size="small">
-              {{ healthText(card.health, card.changeRate) }}
-            </el-tag>
-          </div>
-          <div class="main-number">{{ formatNumber(card.totalXu) }}</div>
-          <div class="delta" :class="{ down: Number(card.changeRate) < 0 }">
-            {{ Number(card.changeRate) >= 0 ? '▲' : '▼' }} {{ Math.abs(Number(card.changeRate || 0)).toFixed(1) }}% vs 上周期
-          </div>
-          <div class="metrics">
-            <div>
-              <span>打赏识别</span>
-              <b>{{ formatNumber(card.giftXu) }}</b>
+    <main>
+      <!-- 01 主播卡片 -->
+      <section>
+        <div class="sec-title">01 · 本周各主播一览</div>
+        <div class="streamer-row">
+          <div class="sc" v-for="card in cardDetails" :key="card.streamerId" :style="'--c:' + getStreamerColor(card.streamerId)">
+            <div class="forecast-badge" :class="getForecastClass(card)">月底 {{ getForecastPct(card) }}%</div>
+            <div class="sc-name">{{ card.stageName }}</div>
+            <div class="sc-diamond">{{ fmt(card.weeklyXu) }}</div>
+            <div class="sc-wow" :class="getWowClass(card)">{{ getWowText(card) }}</div>
+            <hr class="sc-divider">
+            <!-- 送礼 -->
+            <div class="sc-section">
+              <div class="sc-section-title">送礼</div>
+              <div class="sc-fields sc-fields-5">
+                <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.dailyXu) }}</div></div>
+                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.dailyXu, 10000) }}%</div></div>
+                <div><div class="sc-stat-label">月</div><div class="sc-stat-val">{{ fmt(card.monthlyXu) }}</div></div>
+                <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val" :class="getWowClass(card)">{{ getWowPct(card) }}</div></div>
+                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.monthlyXu, 260000) }}%</div></div>
+              </div>
             </div>
-            <div>
-              <span>打赏客户</span>
-              <b>{{ formatNumber(card.giftCustomers) }}</b>
+            <!-- 新增粉丝 -->
+            <div class="sc-section">
+              <div class="sc-section-title">新增粉丝</div>
+              <div class="sc-fields sc-fields-5">
+                <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.newFanDaily) }}</div></div>
+                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.newFanDaily, 10) }}%</div></div>
+                <div><div class="sc-stat-label">月</div><div class="sc-stat-val">{{ fmt(card.newFanMonthly) }}</div></div>
+                <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val">{{ getGrowthRate(card.newFanWeekly, card.newFanLastWeek) }}</div></div>
+                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.newFanMonthly, 260) }}%</div></div>
+              </div>
             </div>
-            <div>
-              <span>私信客户</span>
-              <b>{{ formatNumber(card.chatCustomers) }}</b>
+            <!-- 新增互动人数 -->
+            <div class="sc-section">
+              <div class="sc-section-title">新增互动人数</div>
+              <div class="sc-fields sc-fields-5">
+                <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.chatDaily) }}</div></div>
+                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.chatDaily, 5) }}%</div></div>
+                <div><div class="sc-stat-label">月</div><div class="sc-stat-val">{{ fmt(card.chatMonthly) }}</div></div>
+                <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val">{{ getGrowthRate(card.chatWeekly, card.chatLastWeek) }}</div></div>
+                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.chatMonthly, 130) }}%</div></div>
+              </div>
             </div>
-            <div>
-              <span>日报天数</span>
-              <b>{{ formatNumber(card.reportDays) }}</b>
+            <!-- 新增用户打赏 -->
+            <div class="sc-section">
+              <div class="sc-section-title">新增用户打赏</div>
+              <div class="sc-fields sc-fields-5">
+                <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.newTipDaily) }}</div></div>
+                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">--</div></div>
+                <div><div class="sc-stat-label">月</div><div class="sc-stat-val"><span class="clickable" @click="openNewTippersDialog(card.streamerId)">{{ fmt(card.newTipMonthly) }}</span></div></div>
+                <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val">{{ getGrowthRate(card.newTipWeekly, card.newTipLastWeek) }}</div></div>
+                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">--</div></div>
+              </div>
             </div>
           </div>
-        </article>
-        <el-empty v-if="!cards.length" description="暂无统计数据" />
-      </div>
-
-      <section class="section-title">
-        <span>02 · 本周每日走势</span>
-      </section>
-      <section class="chart-panel">
-        <div class="panel-heading">
-          <strong>每日流水走势</strong>
-          <span>按主播拆分展示已确认日报数据</span>
         </div>
-        <div ref="trendChartRef" class="trend-chart"></div>
       </section>
 
-      <section class="section-title">
-        <span>03 · 客户触达情况</span>
+      <!-- 02 每日走势 -->
+      <section>
+        <div class="sec-title">02 · 本月每日走势</div>
+        <div class="chart-box">
+          <div class="chart-title">每日钻石走势</div>
+          <div class="chart-sub">各主播每日实际钻石收入</div>
+          <div class="legend">
+            <span v-for="s in streamers" :key="s.streamerId">
+              <span class="ldot" :style="{background: getStreamerColor(s.streamerId)}"></span>{{ s.stageName }}
+            </span>
+          </div>
+          <div style="position:relative;height:240px">
+            <div ref="trendChartRef" style="width:100%;height:100%"></div>
+          </div>
+        </div>
       </section>
-      <div class="customer-grid">
-        <article v-for="item in customerCards" :key="item.streamerId" class="customer-card" :class="{ alert: Number(item.contactRate || 0) < 50 }">
-          <div class="card-top">
-            <strong>{{ item.stageName }}</strong>
-            <el-tag v-if="Number(item.contactRate || 0) < 50" type="danger" effect="dark" size="small">急需跟进</el-tag>
+
+      <!-- 03 粉丝转化 -->
+      <section>
+        <div class="sec-title">03 · 月累计送礼粉丝 & 转化率</div>
+        <div class="fan-section">
+          <div class="fan-card" v-for="item in customerCards" :key="item.streamerId" :style="'--c:' + getStreamerColor(item.streamerId)">
+            <div class="danger-tag" v-if="getConversionRate(item) < 30">⚠ 危险</div>
+            <div class="fan-name">{{ item.stageName }}</div>
+            <div class="fan-row">
+              <span class="fan-label">月累计互动（去重）</span>
+              <span class="fan-val">{{ fmt(item.chatCustomers) }}</span>
+            </div>
+            <div class="fan-row">
+              <span class="fan-label">月累计送礼（去重）</span>
+              <span class="fan-val" :style="{color: getStreamerColor(item.streamerId)}">{{ fmt(item.activeCustomers) }}</span>
+            </div>
+            <div class="fan-row">
+              <span class="fan-label">中高级用户（≥1000）</span>
+              <span class="fan-val clickable" :style="{color: getStreamerColor(item.streamerId)}" @click="openHighValueDialog(item.streamerId)">{{ fmt(item.highValueCustomers) }}</span>
+            </div>
+            <div class="conv-wrap">
+              <div class="conv-label">互动 → 中高级用户转化率</div>
+              <div class="conv-track">
+                <div class="conv-fill" :style="{width: getConversionRate(item) + '%', background: getStreamerColor(item.streamerId)}"></div>
+              </div>
+              <div class="conv-pct">{{ getConversionRate(item) }}%</div>
+            </div>
           </div>
-          <div class="customer-row">
-            <span>月活打赏客户</span>
-            <b>{{ formatNumber(item.activeCustomers) }}</b>
+        </div>
+      </section>
+
+      <!-- 04 当日维系情况 -->
+      <section>
+        <div class="sec-title">04 · 当日维系情况 <span style="font-size:12px;color:#99998F;font-weight:400">（仅统计打赏>1000，点击红色数字查看全部）</span></div>
+        <div class="weiji-row" v-if="weijiDayStats.length > 0">
+          <div class="weiji-card" v-for="w in weijiDayStats" :key="w.streamerId" :style="'--c:' + getStreamerColor(w.streamerId)">
+            <div class="weiji-card-header">{{ w.stageName }}</div>
+            <div class="weiji-stats">
+              <div class="weiji-stat">
+                <div class="weiji-dot red"></div>
+                <div><div class="weiji-label">有打赏+无互动</div><div class="weiji-val weiji-clickable" style="color:#DC2626" @click="openWeijiDetail(w.streamerId, 'day')">{{ w.red }} <span class="weiji-pct">{{ getWeijiPct(w.red, w.total) }}%</span></div></div>
+              </div>
+              <div class="weiji-stat">
+                <div class="weiji-dot green"></div>
+                <div><div class="weiji-label">有打赏+有互动</div><div class="weiji-val">{{ w.green }} <span class="weiji-pct">{{ getWeijiPct(w.green, w.total) }}%</span></div></div>
+              </div>
+              <div class="weiji-stat">
+                <div class="weiji-dot yellow"></div>
+                <div><div class="weiji-label">无打赏+有互动</div><div class="weiji-val">{{ w.yellow }} <span class="weiji-pct">{{ getWeijiPct(w.yellow, w.total) }}%</span></div></div>
+              </div>
+              <div class="weiji-stat">
+                <div class="weiji-dot orange"></div>
+                <div><div class="weiji-label">有建联+无互动</div><div class="weiji-val">{{ w.orange }} <span class="weiji-pct">{{ getWeijiPct(w.orange, w.total) }}%</span></div></div>
+              </div>
+            </div>
           </div>
-          <div class="customer-row">
-            <span>已私信客户</span>
-            <b>{{ formatNumber(item.chatCustomers) }}</b>
+        </div>
+      </section>
+
+      <!-- 05 月维系情况 -->
+      <section>
+        <div class="sec-title">05 · 月维系情况 <span style="font-size:12px;color:#99998F;font-weight:400">（月累计，仅统计打赏>1000，点击红色数字查看全部）</span></div>
+        <div class="weiji-row" v-if="weijiMonthStatsData.length > 0">
+          <div class="weiji-card" v-for="w in weijiMonthStatsData" :key="w.streamerId" :style="'--c:' + getStreamerColor(w.streamerId)">
+            <div class="weiji-card-header">{{ w.stageName }}</div>
+            <div class="weiji-stats">
+              <div class="weiji-stat">
+                <div class="weiji-dot red"></div>
+                <div><div class="weiji-label">有打赏+无互动</div><div class="weiji-val weiji-clickable" style="color:#DC2626" @click="openWeijiDetail(w.streamerId, 'month')">{{ w.red }} <span class="weiji-pct">{{ getWeijiPct(w.red, w.total) }}%</span></div></div>
+              </div>
+              <div class="weiji-stat">
+                <div class="weiji-dot green"></div>
+                <div><div class="weiji-label">有打赏+有互动</div><div class="weiji-val">{{ w.green }} <span class="weiji-pct">{{ getWeijiPct(w.green, w.total) }}%</span></div></div>
+              </div>
+              <div class="weiji-stat">
+                <div class="weiji-dot yellow"></div>
+                <div><div class="weiji-label">无打赏+有互动</div><div class="weiji-val">{{ w.yellow }} <span class="weiji-pct">{{ getWeijiPct(w.yellow, w.total) }}%</span></div></div>
+              </div>
+              <div class="weiji-stat">
+                <div class="weiji-dot orange"></div>
+                <div><div class="weiji-label">有建联+无互动</div><div class="weiji-val">{{ w.orange }} <span class="weiji-pct">{{ getWeijiPct(w.orange, w.total) }}%</span></div></div>
+              </div>
+            </div>
           </div>
-          <div class="customer-row">
-            <span>中高价值客户</span>
-            <b>{{ formatNumber(item.highValueCustomers) }}</b>
+        </div>
+      </section>
+
+      <!-- 06 AI 运营分析 -->
+      <section>
+        <div class="sec-title">06 · AI 运营分析</div>
+        <div class="ai-chat-row">
+          <div class="ai-chat-card" v-for="item in adviceList" :key="item.streamerId" :style="'--c:' + getStreamerColor(item.streamerId)">
+            <div class="ai-chat-header">
+              <div class="ai-chat-name">{{ item.stageName }}</div>
+              <div class="ai-chat-status">{{ item.status }}</div>
+            </div>
+            <div class="ai-chat-messages" :ref="el => { if (el) chatRefs[item.streamerId] = el }">
+              <div v-if="!chatMessages[item.streamerId] || chatMessages[item.streamerId].length === 0" class="ai-msg ai-msg-ai" style="text-align:center;max-width:100%">
+                💬 在下方输入问题，开始 AI 分析
+              </div>
+              <template v-if="chatMessages[item.streamerId]">
+                <div v-for="(msg, idx) in chatMessages[item.streamerId]" :key="idx" :class="['ai-msg', msg.role === 'user' ? 'ai-msg-user' : 'ai-msg-ai']">
+                  <div class="ai-msg-content" v-html="msg.content"></div>
+                </div>
+              </template>
+              <div v-if="chatLoading[item.streamerId]" class="ai-msg ai-msg-ai ai-typing">
+                <div class="ai-msg-content">思考中...</div>
+              </div>
+            </div>
+            <div class="ai-chat-input">
+              <input
+                type="text"
+                v-model="chatInputs[item.streamerId]"
+                placeholder="问点什么..."
+                @keyup.enter="sendChat(item.streamerId)"
+              />
+              <button @click="sendChat(item.streamerId)" :disabled="isChatLoading(item.streamerId)">发送</button>
+            </div>
           </div>
-          <el-progress :percentage="Number(item.contactRate || 0)" :show-text="false" :stroke-width="8" />
-          <div class="rate">{{ Number(item.contactRate || 0).toFixed(1) }}%</div>
-        </article>
-      </div>
+        </div>
+      </section>
     </main>
+
+    <!-- 中高级用户弹窗 -->
+    <div class="modal-overlay" :class="{show: highValueDialog.open}" @click="highValueDialog.open = false">
+      <div class="modal-box" @click.stop>
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">中高级用户</div>
+            <div class="modal-sub">月累计送礼 ≥ 1,000 钻石 · 共 {{ highValueDialog.data.length }} 人</div>
+          </div>
+          <button class="modal-close" @click="highValueDialog.open = false">&times;</button>
+        </div>
+        <div class="modal-body">
+          <table>
+            <thead><tr><th>#</th><th>粉丝名称</th><th>标记</th><th>月累计送礼</th><th>活跃天数</th><th>最后活跃</th></tr></thead>
+            <tbody>
+              <tr v-for="(item, idx) in highValueDialog.data" :key="item.customerId">
+                <td class="mono">{{ idx + 1 }}</td>
+                <td class="highlight">{{ item.nickname }}</td>
+                <td>{{ item.badge }}</td>
+                <td class="mono" style="font-weight:600">{{ fmt(item.totalXu) }}</td>
+                <td class="mono">{{ item.activeDays }}</td>
+                <td class="mono">{{ item.lastActiveDate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 维系详情弹窗 -->
+    <div class="modal-overlay" :class="{show: weijiDetailDialog.open}" @click="weijiDetailDialog.open = false">
+      <div class="modal-box" @click.stop>
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">{{ weijiDetailDialog.title }}</div>
+            <div class="modal-sub">共 {{ weijiDetailDialog.data.length }} 人</div>
+          </div>
+          <button class="modal-close" @click="weijiDetailDialog.open = false">&times;</button>
+        </div>
+        <div class="modal-body">
+          <table>
+            <thead><tr><th>#</th><th>粉丝</th><th>标记</th><th>月打赏</th><th>红色天数</th><th>红色日期</th></tr></thead>
+            <tbody>
+              <tr v-for="(item, idx) in weijiDetailDialog.data" :key="item.customerId">
+                <td class="mono">{{ idx + 1 }}</td>
+                <td class="highlight">{{ item.nickname }}</td>
+                <td>{{ item.badge }}</td>
+                <td class="mono" style="font-weight:600">{{ fmt(item.totalXu) }}</td>
+                <td class="mono" style="color:#DC2626">{{ item.redDays }}</td>
+                <td style="font-size:10px;color:#99998F">{{ item.redDates }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新增打赏用户弹窗 -->
+    <div class="modal-overlay" :class="{show: newTippersDialog.open}" @click="newTippersDialog.open = false">
+      <div class="modal-box" @click.stop>
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">新增打赏用户</div>
+            <div class="modal-sub">本月首次打赏 · 共 {{ newTippersDialog.data.length }} 人</div>
+          </div>
+          <button class="modal-close" @click="newTippersDialog.open = false">&times;</button>
+        </div>
+        <div class="modal-body">
+          <table>
+            <thead><tr><th>#</th><th>粉丝名称</th><th>标记</th><th>首笔打赏日</th><th>月累计打赏</th></tr></thead>
+            <tbody>
+              <tr v-for="(item, idx) in newTippersDialog.data" :key="item.customerId">
+                <td class="mono">{{ idx + 1 }}</td>
+                <td class="highlight">{{ item.nickname }}</td>
+                <td>{{ item.badge }}</td>
+                <td class="mono">{{ item.firstTipDate }}</td>
+                <td class="mono" style="font-weight:600">{{ fmt(item.totalXu) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup name="LiveStats">
 import * as echarts from 'echarts'
-import { weeklyStats } from '@/api/live/stats'
+import { weeklyStats, streamerCardDetail, highValueUsers, newTippers, weijiStats, weijiMonthStats, weijiDetail, adviceData } from '@/api/live/stats'
+import { getToken } from '@/utils/auth'
 import { listStreamers } from '@/api/live/upload'
+
+const STREAMER_COLORS = {
+  100: '#2D8C2D',  // Zhenzhen
+  101: '#FF0000',  // Mina
+  102: '#6B5CC4',  // Xixi
+  103: '#A07020',  // Hana
+}
 
 const loading = ref(false)
 const cards = ref([])
+const cardDetails = ref([])
 const customerCards = ref([])
 const trend = ref([])
 const streamers = ref([])
 const overview = ref({})
+const monthlyTotal = ref(0)
 const trendChartRef = ref(null)
+const trendChartRef2 = ref(null)
 let trendChart = null
+let trendChart2 = null
 
 const today = new Date()
+today.setDate(today.getDate() - 1)
+const currentWeek = Math.ceil(today.getDate() / 7) || 1
+const todayStr = (today.getMonth() + 1) + '月' + today.getDate() + '日'
+
 const defaultEnd = formatDate(today)
-const defaultBegin = formatDate(new Date(today.getTime() - 6 * 86400000))
+const defaultBegin = formatDate(new Date(today.getFullYear(), today.getMonth(), 1))
 const dateRange = ref([defaultBegin, defaultEnd])
 
 const query = reactive({
@@ -135,11 +336,25 @@ const query = reactive({
   streamerId: undefined
 })
 
-const weekNo = computed(() => {
-  const firstDay = new Date(new Date(query.endDate).getFullYear(), 0, 1)
-  const diff = Math.floor((new Date(query.endDate) - firstDay) / 86400000)
-  return Math.ceil((diff + firstDay.getDay() + 1) / 7)
-})
+const highValueDialog = reactive({ open: false, data: [] })
+const newTippersDialog = reactive({ open: false, data: [] })
+const weijiDetailDialog = reactive({ open: false, data: [], title: '' })
+const weijiDayStats = ref([])
+const weijiMonthStatsData = ref([])
+const adviceList = ref([])
+const chatMessages = reactive({})
+const chatInputs = reactive({})
+const chatLoading = reactive({})
+const chatRefs = reactive({})
+
+// 初始化主播聊天数据
+function initChat(streamerId) {
+  if (!chatMessages[streamerId]) {
+    chatMessages[streamerId] = []
+    chatInputs[streamerId] = ''
+    chatLoading[streamerId] = false
+  }
+}
 
 function formatDate(date) {
   const y = date.getFullYear()
@@ -148,27 +363,72 @@ function formatDate(date) {
   return `${y}-${m}-${d}`
 }
 
-function formatNumber(value) {
-  return Number(value || 0).toLocaleString()
+function fmt(n) { return n ? Number(n).toLocaleString() : '0' }
+
+function getStreamerColor(streamerId) {
+  return STREAMER_COLORS[streamerId] || '#999'
 }
 
-function healthText(health, changeRate) {
-  if (health === 'good') return `月度 ${Number(changeRate || 0).toFixed(1)}% · 稳健`
-  if (health === 'risk') return `月度 ${Number(changeRate || 0).toFixed(1)}% · 急需`
-  if (health === 'watch') return `月度 ${Number(changeRate || 0).toFixed(1)}% · 观察`
-  return '暂无对比'
+function getWowClass(card) {
+  const wow = getWowRate(card)
+  return wow > 0 ? 'up' : wow < 0 ? 'dn' : ''
 }
 
-function healthTag(health) {
-  return health === 'good' ? 'success' : health === 'risk' ? 'danger' : health === 'watch' ? 'warning' : 'info'
+function getWowRate(card) {
+  if (!card.lastWeekXu || card.lastWeekXu === 0) return card.weeklyXu > 0 ? 100 : 0
+  return Math.round((card.weeklyXu - card.lastWeekXu) / card.lastWeekXu * 100)
 }
 
-function handleDateChange(value) {
-  if (value && value.length === 2) {
-    query.beginDate = value[0]
-    query.endDate = value[1]
-    loadData()
-  }
+function getWowText(card) {
+  const wow = getWowRate(card)
+  if (wow === 0) return '持平'
+  return (wow > 0 ? '▲ +' : '▼ ') + Math.abs(wow) + '% vs 上周同期'
+}
+
+function getWowPct(card) {
+  const wow = getWowRate(card)
+  return (wow > 0 ? '+' : '') + wow + '%'
+}
+
+function getGrowthRate(current, previous) {
+  if (!previous || previous === 0) return current > 0 ? '+100%' : '--'
+  const rate = Math.round((current - previous) / previous * 100)
+  return (rate > 0 ? '+' : '') + rate + '%'
+}
+
+function getWeeklyKpiPct(weekly, weeklyKpi) {
+  if (!weeklyKpi || weeklyKpi === 0) return '--'
+  return Math.round(weekly / weeklyKpi * 100)
+}
+
+function getMonthlyKpiPct(monthly, monthlyKpi) {
+  if (!monthlyKpi || monthlyKpi === 0) return '--'
+  return Math.round(monthly / monthlyKpi * 100)
+}
+
+function getDailyKpiPct(daily, dailyKpi) {
+  if (!dailyKpi || dailyKpi === 0) return '--'
+  return Math.round(daily / dailyKpi * 100)
+}
+
+function getForecastPct(card) {
+  if (!card.monthlyXu || card.monthlyXu === 0) return '0.0'
+  const dayOfMonth = today.getDate()
+  const dailyAvg = card.monthlyXu / dayOfMonth
+  const forecast = Math.min(100, dailyAvg * 26 / 10000 * 100)
+  return forecast.toFixed(1)
+}
+
+function getForecastClass(card) {
+  const pct = parseFloat(getForecastPct(card))
+  if (pct >= 100) return 'forecast-good'
+  if (pct >= 70) return 'forecast-warn'
+  return 'forecast-danger'
+}
+
+function getConversionRate(item) {
+  if (!item.activeCustomers || item.activeCustomers === 0) return 0
+  return Math.round(item.highValueCustomers / item.activeCustomers * 100)
 }
 
 async function loadData() {
@@ -180,11 +440,26 @@ async function loadData() {
     cards.value = data.cards || []
     customerCards.value = data.customerCards || []
     trend.value = data.trend || []
+    monthlyTotal.value = cards.value.reduce((sum, c) => sum + (c.totalXu || 0), 0)
     await nextTick()
     renderTrend()
+    await loadCardDetails()
   } finally {
     loading.value = false
   }
+}
+
+async function loadCardDetails() {
+  const details = []
+  for (const card of cards.value) {
+    try {
+      const res = await streamerCardDetail(card.streamerId)
+      if (res.data && res.data.length > 0) {
+        details.push(res.data[0])
+      }
+    } catch (e) { console.error(e) }
+  }
+  cardDetails.value = details
 }
 
 function renderTrend() {
@@ -216,244 +491,887 @@ function renderTrend() {
   })
 }
 
-listStreamers().then(res => {
-  streamers.value = res.data || []
-})
+async function openHighValueDialog(streamerId) {
+  const month = query.beginDate.substring(0, 7)
+  try {
+    const res = await highValueUsers(streamerId, month)
+    highValueDialog.data = res.data || []
+    highValueDialog.open = true
+  } catch (e) { console.error(e) }
+}
+
+async function openNewTippersDialog(streamerId) {
+  const month = query.beginDate.substring(0, 7)
+  try {
+    const res = await newTippers(streamerId, month)
+    newTippersDialog.data = res.data || []
+    newTippersDialog.open = true
+  } catch (e) { console.error(e) }
+}
+
+listStreamers().then(res => { streamers.value = res.data || [] })
 loadData()
+loadWeijiData()
+
+async function loadWeijiData() {
+  try {
+    const dayRes = await weijiStats()
+    weijiDayStats.value = dayRes.data || []
+  } catch (e) { console.error(e) }
+  try {
+    const monthRes = await weijiMonthStats()
+    weijiMonthStatsData.value = monthRes.data || []
+  } catch (e) { console.error(e) }
+  try {
+    const advRes = await adviceData()
+    adviceList.value = advRes.data || []
+    // 初始化每个主播的聊天数据
+    adviceList.value.forEach(item => initChat(item.streamerId))
+  } catch (e) { console.error(e) }
+}
+
+function getWeijiPct(value, total) {
+  if (!total || total === 0) return 0
+  return Math.round(value / total * 100)
+}
+
+async function getChatMessages(streamerId) {
+  return chatMessages[streamerId] || []
+}
+
+function isChatLoading(streamerId) {
+  return chatLoading[streamerId] || false
+}
+
+function renderMarkdown(text) {
+  if (!text) return ''
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>')
+}
+
+async function sendChat(streamerId) {
+  initChat(streamerId)
+  const message = (chatInputs[streamerId] || '').trim()
+  if (!message) return
+
+  chatMessages[streamerId].push({ role: 'user', content: message })
+  chatInputs[streamerId] = ''
+  chatLoading[streamerId] = true
+
+  // 滚动到底部
+  await nextTick()
+  const chatEl = chatRefs[streamerId]
+  if (chatEl) chatEl.scrollTop = chatEl.scrollHeight
+
+  const history = chatMessages[streamerId].slice(-10)
+
+  try {
+    const baseApi = import.meta.env.VITE_APP_BASE_API
+    const response = await fetch(baseApi + '/live/stats/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + getToken()
+      },
+      body: JSON.stringify({ streamerId, message, history })
+    })
+
+    if (!response.ok) {
+      throw new Error('HTTP ' + response.status)
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let aiMessage = ''
+    let buffer = ''
+    chatMessages[streamerId].push({ role: 'assistant', content: '' })
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        if (trimmed.startsWith('data:')) {
+          const data = trimmed.substring(5).trim()
+          if (data === '[DONE]') break
+          try {
+            const parsed = JSON.parse(data)
+            if (parsed.delta) {
+              aiMessage += parsed.delta
+              chatMessages[streamerId][chatMessages[streamerId].length - 1].content = aiMessage
+            }
+          } catch (e) {
+            // 兼容纯文本格式
+            if (data && !data.startsWith('AI') && !data.startsWith('错误')) {
+              aiMessage += data
+              chatMessages[streamerId][chatMessages[streamerId].length - 1].content = aiMessage
+            }
+          }
+        }
+      }
+
+      await nextTick()
+      const el = chatRefs[streamerId]
+      if (el) el.scrollTop = el.scrollHeight
+    }
+
+    if (!aiMessage) {
+      chatMessages[streamerId][chatMessages[streamerId].length - 1].content = '（无回复）'
+    }
+  } catch (e) {
+    console.error('Chat error:', e)
+    const msgs = chatMessages[streamerId]
+    if (msgs.length > 0 && msgs[msgs.length - 1].content === '') {
+      msgs[msgs.length - 1].content = '请求失败: ' + e.message
+    } else {
+      msgs.push({ role: 'assistant', content: '请求失败: ' + e.message })
+    }
+  } finally {
+    chatLoading[streamerId] = false
+  }
+}
+
+async function openWeijiDetail(streamerId, mode) {
+  const streamer = streamers.value.find(s => s.streamerId === streamerId)
+  const stageName = streamer ? streamer.stageName : '未知'
+  weijiDetailDialog.title = stageName + ' · 有打赏+无互动'
+
+  let beginDate, endDate
+  if (mode === 'day') {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    beginDate = formatDate(yesterday)
+    endDate = beginDate
+  } else {
+    const today = new Date()
+    const end = new Date(today)
+    end.setDate(end.getDate() - 1)
+    endDate = formatDate(end)
+    beginDate = end.getFullYear() + '-' + String(end.getMonth() + 1).padStart(2, '0') + '-01'
+  }
+
+  try {
+    const res = await weijiDetail(streamerId, beginDate, endDate)
+    weijiDetailDialog.data = res.data || []
+    weijiDetailDialog.open = true
+  } catch (e) { console.error(e) }
+}
 </script>
 
 <style scoped>
-.live-report-page {
+:root {
+  --bg: #F5F5F3;
+  --card: #FFFFFF;
+  --surface2: #EFEFED;
+  --border: rgba(0,0,0,0.08);
+  --text: #1A1A18;
+  --muted: #555550;
+  --dim: #99998F;
+  --up: #1E7E3E;
+  --dn: #A03030;
+}
+
+.report-page {
   min-height: calc(100vh - 84px);
-  background: #f4f5f3;
-  color: #111827;
+  background: #F5F5F3;
+  color: #1A1A18;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
 }
 
 .report-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 30px 42px 26px;
-  background: #fff;
-  border-bottom: 1px solid #d9ded8;
+  background: #FFFFFF;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  padding: 44px 52px 32px;
 }
 
 .eyebrow {
-  color: #8b949e;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.report-header h1 {
-  margin: 10px 0 6px;
-  font-size: 28px;
-  line-height: 1.2;
-  letter-spacing: 0;
-}
-
-.report-header p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 13px;
-}
-
-.filter-bar {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.report-body {
-  padding: 18px 42px 42px;
-}
-
-.overview-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 22px;
-}
-
-.overview-pills span {
-  padding: 5px 12px;
-  color: #6b7280;
-  background: #fff;
-  border: 1px solid #d9ded8;
-  border-radius: 999px;
-  font-size: 12px;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  margin: 22px 0 12px;
-  color: #8b949e;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.section-title::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  margin-left: 10px;
-  background: #d9ded8;
-}
-
-.streamer-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(240px, 1fr));
-  gap: 14px;
-}
-
-.streamer-card,
-.chart-panel,
-.customer-card {
-  background: #fff;
-  border: 1px solid #dcdfe3;
-  border-radius: 6px;
-}
-
-.streamer-card {
-  padding: 16px;
-  border-top: 3px solid #9ca3af;
-}
-
-.streamer-card.good { border-top-color: #16a34a; }
-.streamer-card.watch { border-top-color: #ca8a04; }
-.streamer-card.risk { border-top-color: #dc2626; }
-
-.card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.card-top strong {
-  font-size: 14px;
-}
-
-.main-number {
-  margin-top: 12px;
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.delta {
-  margin-top: 7px;
-  color: #059669;
-  font-size: 12px;
-}
-
-.delta.down {
-  color: #dc2626;
-}
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px 20px;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.metrics span,
-.customer-row span,
-.panel-heading span {
-  display: block;
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.metrics b,
-.customer-row b {
-  display: block;
-  margin-top: 4px;
-  font-size: 14px;
-}
-
-.chart-panel {
-  padding: 16px;
-}
-
-.panel-heading {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #99998F;
+  letter-spacing: .16em;
+  text-transform: uppercase;
   margin-bottom: 8px;
 }
 
-.panel-heading strong {
-  display: block;
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -.02em;
   margin-bottom: 4px;
 }
 
-.trend-chart {
-  height: 300px;
+.period {
+  font-size: 14px;
+  color: #555550;
+  margin-bottom: 20px;
 }
 
-.customer-grid {
+.meta-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #99998F;
+  background: #EFEFED;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+main {
+  padding: 32px 52px 80px;
+  max-width: 1260px;
+}
+
+section {
+  margin-bottom: 40px;
+}
+
+.sec-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #99998F;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sec-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(0,0,0,0.08);
+}
+
+.streamer-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.sc {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-top: 3px solid var(--c);
+  border-radius: 8px;
+  padding: 16px 16px 14px;
+  position: relative;
+}
+
+.sc-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c);
+  margin-bottom: 12px;
+}
+
+.sc-diamond {
+  font-family: 'DM Mono', monospace;
+  font-size: 24px;
+  font-weight: 500;
+  color: #1A1A18;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.sc-wow {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.sc-wow.up { color: #1E7E3E; }
+.sc-wow.dn { color: #A03030; }
+
+.sc-divider {
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  margin: 10px 0;
+}
+
+.sc-section {
+  margin-bottom: 8px;
+}
+
+.sc-section:last-child { margin-bottom: 0; }
+
+.sc-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--c);
+  margin-bottom: 6px;
+  letter-spacing: .04em;
+}
+
+.sc-fields {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.sc-fields-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.sc-fields-5 .sc-stat-label {
+  font-size: 7px;
+}
+
+.sc-fields-5 .sc-stat-val {
+  font-size: 8px;
+}
+
+.sc-stat-label {
+  font-size: 9px;
+  color: #99998F;
+  margin-bottom: 1px;
+}
+
+.sc-stat-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.sc-stat-val.clickable {
+  cursor: pointer;
+  border-bottom: 1.5px dashed #99998F;
+  color: var(--c);
+  transition: opacity .15s;
+}
+
+.sc-stat-val.clickable:hover { opacity: .7; }
+
+.forecast-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: .04em;
+}
+
+.forecast-good { background: #1E7E3E; box-shadow: 0 2px 4px rgba(30,126,62,.3); }
+.forecast-warn { background: #A07020; box-shadow: 0 2px 4px rgba(160,112,32,.3); }
+.forecast-danger { background: #DC2626; box-shadow: 0 2px 4px rgba(220,38,38,.3); }
+
+.chart-box {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.chart-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #555550;
+  margin-bottom: 3px;
+}
+
+.chart-sub {
+  font-size: 11px;
+  color: #99998F;
+  margin-bottom: 14px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #555550;
+}
+
+.ldot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.fan-section {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.fan-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 8px;
+  padding: 14px 16px;
+  position: relative;
+}
+
+.fan-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c);
+  margin-bottom: 10px;
+}
+
+.fan-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.fan-row:last-of-type { border-bottom: none; }
+
+.fan-label {
+  font-size: 11px;
+  color: #99998F;
+}
+
+.fan-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.fan-val.clickable {
+  cursor: pointer;
+  border-bottom: 1.5px dashed;
+}
+
+.conv-wrap { margin-top: 10px; }
+
+.conv-label {
+  font-size: 10px;
+  color: #99998F;
+  margin-bottom: 4px;
+}
+
+.conv-track {
+  height: 5px;
+  background: #EFEFED;
+  border-radius: 3px;
+}
+
+.conv-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.conv-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 3px;
+  color: var(--c);
+}
+
+.danger-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #DC2626;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: .06em;
+  box-shadow: 0 2px 4px rgba(220,38,38,.3);
+}
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-overlay.show { display: flex; }
+
+.modal-box {
+  background: #FFFFFF;
+  border-radius: 10px;
+  width: min(720px, 90vw);
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.modal-sub {
+  font-size: 11px;
+  color: #99998F;
+  font-family: 'DM Mono', monospace;
+  margin-top: 2px;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 50%;
+  background: #FFFFFF;
+  cursor: pointer;
+  font-size: 16px;
+  color: #555550;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background .15s;
+}
+
+.modal-close:hover { background: #EFEFED; }
+
+.modal-body {
+  overflow-y: auto;
+  padding: 8px 24px 20px;
+}
+
+.modal-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.modal-body thead {
+  background: #EFEFED;
+}
+
+.modal-body th {
+  padding: 10px 14px;
+  text-align: left;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #99998F;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  white-space: nowrap;
+}
+
+.modal-body td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  vertical-align: top;
+}
+
+.modal-body tr:last-child td { border-bottom: none; }
+.modal-body tr:hover td { background: rgba(0,0,0,0.015); }
+
+.mono {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+}
+
+.highlight {
+  color: var(--c);
+  font-weight: 500;
+}
+
+/* 维系追踪卡片 */
+.weiji-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+
+.weiji-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-top: 3px solid var(--c);
+  border-radius: 8px;
+  padding: 14px 12px;
+}
+
+.weiji-card-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c);
+  margin-bottom: 10px;
+}
+
+.weiji-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.weiji-stat {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 10px;
+}
+
+.weiji-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.weiji-dot.red { background: #DC2626; }
+.weiji-dot.green { background: #2D8C2D; }
+.weiji-dot.yellow { background: #E6C300; }
+.weiji-dot.orange { background: #E67E22; }
+
+.weiji-label {
+  color: #99998F;
+  font-size: 9px;
+}
+
+.weiji-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.weiji-pct {
+  font-size: 9px;
+  color: #99998F;
+  font-weight: 400;
+}
+
+.weiji-clickable {
+  cursor: pointer;
+  border-bottom: 1.5px dashed;
+}
+
+.weiji-clickable:hover {
+  opacity: 0.7;
+}
+
+/* 运营建议卡片 */
+.adv-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.adv-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-left: 3px solid var(--c);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.adv-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c);
+  margin-bottom: 2px;
+}
+
+.adv-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #99998F;
+  margin-bottom: 10px;
+  letter-spacing: .04em;
+}
+
+.adv-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.adv-list li {
+  font-size: 11px;
+  color: #555550;
+  padding: 3px 0 3px 12px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.adv-list li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: #99998F;
+}
+
+.alert-chip {
+  background: rgba(160,48,48,.07);
+  border: 1px solid rgba(160,48,48,.2);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 10px;
+  color: #A03030;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 8px;
+}
+
+/* AI 聊天卡片 */
+.ai-chat-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 14px;
 }
 
-.customer-card {
-  padding: 14px;
-}
-
-.customer-card.alert {
-  border-top: 3px solid #dc2626;
-}
-
-.customer-row {
+.ai-chat-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-top: 3px solid var(--c);
+  border-radius: 8px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 9px 0;
-  border-bottom: 1px solid #eef0f2;
+  flex-direction: column;
+  height: 400px;
 }
 
-.rate {
-  margin-top: 7px;
-  font-size: 12px;
+.ai-chat-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.ai-chat-name {
+  font-size: 13px;
   font-weight: 700;
+  color: var(--c);
+}
+
+.ai-chat-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #99998F;
+  margin-top: 2px;
+}
+
+.ai-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+}
+
+.ai-msg {
+  margin-bottom: 10px;
+}
+
+.ai-msg-user {
+  text-align: right;
+}
+
+.ai-msg-user .ai-msg-content {
+  display: inline-block;
+  background: var(--c);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 12px 12px 4px 12px;
+  max-width: 85%;
+  text-align: left;
+  font-size: 13px;
+}
+
+.ai-msg-ai .ai-msg-content {
+  display: inline-block;
+  background: #f4f5f3;
+  color: #1A1A18;
+  padding: 8px 12px;
+  border-radius: 12px 12px 12px 4px;
+  max-width: 85%;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ai-typing {
+  color: #99998F;
+  font-style: italic;
+}
+
+.ai-chat-input {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+.ai-chat-input input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+.ai-chat-input input:focus {
+  border-color: var(--c);
+}
+
+.ai-chat-input button {
+  padding: 8px 16px;
+  background: var(--c);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.ai-chat-input button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (max-width: 1100px) {
-  .streamer-grid {
-    grid-template-columns: repeat(2, minmax(220px, 1fr));
-  }
-
-  .customer-grid {
-    grid-template-columns: repeat(3, minmax(160px, 1fr));
-  }
+  .streamer-row { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+  .fan-section { grid-template-columns: repeat(3, minmax(160px, 1fr)); }
+  .weiji-row { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 760px) {
-  .report-header {
-    display: block;
-    padding: 22px 16px;
-  }
-
-  .filter-bar {
-    justify-content: flex-start;
-    margin-top: 16px;
-  }
-
-  .report-body {
-    padding: 14px 16px 28px;
-  }
-
-  .streamer-grid,
-  .customer-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .trend-chart {
-    height: 240px;
-  }
+  .report-header { padding: 22px 16px; }
+  main { padding: 14px 16px 28px; }
+  .streamer-row, .fan-section, .weiji-row { grid-template-columns: 1fr; }
 }
 </style>

@@ -30,6 +30,7 @@
         <el-form-item>
           <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
           <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+          <el-button type="warning" icon="Connection" @click="openMergeDialog">合并客户</el-button>
         </el-form-item>
       </el-form>
 
@@ -203,6 +204,30 @@
         <el-button type="success" @click="handleSave(true)">保存并入库</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="merge.open" title="合并客户" width="500px" append-to-body>
+      <el-form label-width="100px">
+        <el-form-item label="主播">
+          <el-select v-model="merge.streamerId" filterable placeholder="选择主播" style="width: 100%" @change="loadCustomersForMerge">
+            <el-option v-for="s in streamers" :key="s.streamerId" :label="s.stageName" :value="s.streamerId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="主客户">
+          <el-select v-model="merge.primaryId" filterable placeholder="选择保留的客户" style="width: 100%">
+            <el-option v-for="c in mergeCustomers" :key="c.customerId" :label="c.nickname" :value="c.customerId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="副客户">
+          <el-select v-model="merge.secondaryId" filterable placeholder="选择被合并的客户" style="width: 100%">
+            <el-option v-for="c in mergeCustomers" :key="c.customerId" :label="c.nickname" :value="c.customerId" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="merge.open = false">取消</el-button>
+        <el-button type="primary" @click="handleMerge">确认合并</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -210,6 +235,7 @@
 import { Loading } from '@element-plus/icons-vue'
 import { listReview, recognizeUpload, saveReviewResult, confirmReview } from '@/api/live/review'
 import { listStreamers } from '@/api/live/upload'
+import { listCustomers, mergeCustomers as mergeCustomersApi } from '@/api/live/customer'
 
 const { proxy } = getCurrentInstance()
 const baseApi = import.meta.env.VITE_APP_BASE_API
@@ -238,6 +264,15 @@ const editor = reactive({
     totalXu: 0,
     rawText: ''
   }
+})
+
+const customers = ref([])
+const mergeCustomers = ref([])
+const merge = reactive({
+  open: false,
+  streamerId: undefined,
+  primaryId: undefined,
+  secondaryId: undefined
 })
 
 const typeOptions = [
@@ -455,7 +490,53 @@ function handleConfirm(row) {
 listStreamers().then(res => {
   streamers.value = res.data || []
 })
+loadCustomers()
 loadList()
+
+function loadCustomers() {
+  listCustomers({ pageSize: 100 }).then(res => {
+    customers.value = res.rows || []
+  })
+}
+
+function openMergeDialog() {
+  merge.streamerId = undefined
+  merge.primaryId = undefined
+  merge.secondaryId = undefined
+  mergeCustomers.value = []
+  merge.open = true
+}
+
+function loadCustomersForMerge() {
+  if (!merge.streamerId) {
+    mergeCustomers.value = []
+    return
+  }
+  listCustomers({ streamerId: merge.streamerId, pageSize: 100 }).then(res => {
+    mergeCustomers.value = res.rows || []
+  })
+}
+
+function handleMerge() {
+  if (!merge.primaryId || !merge.secondaryId) {
+    proxy.$modal.msgWarning('请选择主客户和副客户')
+    return
+  }
+  if (merge.primaryId === merge.secondaryId) {
+    proxy.$modal.msgWarning('不能合并同一个客户')
+    return
+  }
+  const primary = customers.value.find(c => c.customerId === merge.primaryId)
+  const secondary = customers.value.find(c => c.customerId === merge.secondaryId)
+  proxy.$modal.confirm(`确认将 ${secondary.nickname} 合并到 ${primary.nickname} 吗？合并后不可撤销。`).then(() => {
+    mergeCustomersApi(merge.primaryId, merge.secondaryId).then(() => {
+      proxy.$modal.msgSuccess('合并成功')
+      merge.open = false
+      loadCustomers()
+      loadList()
+    })
+  }).catch(() => {})
+}
 </script>
 
 <style scoped>
