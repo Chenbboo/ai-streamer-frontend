@@ -54,7 +54,10 @@
         </el-table-column>
         <el-table-column label="识别状态" width="120" align="center">
           <template #default="{ row }">
-            <el-tag :type="statusTag(row.aiStatus)">{{ statusLabel(row.aiStatus) }}</el-tag>
+            <el-tag v-if="row._recognizing" type="primary" effect="plain">
+              <el-icon class="is-loading" style="margin-right: 4px"><Loading /></el-icon>识别中
+            </el-tag>
+            <el-tag v-else :type="statusTag(row.aiStatus)">{{ statusLabel(row.aiStatus) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="识别摘要" min-width="260">
@@ -69,11 +72,12 @@
               v-hasPermi="['live:review:edit']"
               link
               type="primary"
-              icon="MagicStick"
-              :disabled="row.aiStatus === '2' || row.aiStatus === '4'"
+              :icon="row._recognizing ? 'Loading' : 'MagicStick'"
+              :loading="row._recognizing"
+              :disabled="row.aiStatus === '2' || row.aiStatus === '4' || row._recognizing"
               @click="handleMock(row)"
             >
-              AI识别
+              {{ row._recognizing ? '识别中...' : 'AI识别' }}
             </el-button>
             <el-button
               v-hasPermi="['live:review:edit']"
@@ -141,28 +145,44 @@
       </template>
 
       <template v-else-if="editor.form.type === 'chat'">
-        <el-table :data="editor.form.items" border>
-          <el-table-column label="客户昵称" min-width="200">
-            <template #default="{ row }">
-              <el-input v-model="row.nickname" placeholder="客户昵称" />
-            </template>
-          </el-table-column>
-          <el-table-column label="标记/徽章" min-width="160">
-            <template #default="{ row }">
-              <el-input v-model="row.badge" placeholder="可为空" />
-            </template>
-          </el-table-column>
-          <el-table-column label="消息数" width="140">
-            <template #default="{ row }">
-              <el-input-number v-model="row.messageCount" :min="0" :controls="false" class="xu-input" />
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="80" align="center">
-            <template #default="{ $index }">
-              <el-button link type="danger" icon="Delete" @click="removeItem($index)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div v-for="(item, idx) in editor.form.items" :key="idx" class="chat-customer-block">
+          <div class="chat-customer-header">
+            <el-input v-model="item.nickname" placeholder="客户昵称" style="width: 220px" />
+            <el-input v-model="item.badge" placeholder="标记/徽章(可选)" style="width: 160px; margin-left: 8px" />
+            <el-button link type="danger" icon="Delete" style="margin-left: 8px" @click="removeItem(idx)">删除</el-button>
+          </div>
+          <el-table :data="item.messages" border size="small" style="margin-top: 6px">
+            <el-table-column label="发送方" width="100">
+              <template #default="{ row: msg }">
+                <el-select v-model="msg.sender" size="small">
+                  <el-option label="客户" value="customer" />
+                  <el-option label="主播" value="streamer" />
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="类型" width="90">
+              <template #default="{ row: msg }">
+                <el-select v-model="msg.messageType" size="small">
+                  <el-option label="文本" value="text" />
+                  <el-option label="视频" value="video" />
+                  <el-option label="图片" value="image" />
+                  <el-option label="语音" value="audio" />
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="消息内容">
+              <template #default="{ row: msg }">
+                <el-input v-model="msg.content" size="small" placeholder="聊天内容" />
+              </template>
+            </el-table-column>
+            <el-table-column label="" width="60" align="center">
+              <template #default="{ $index: mi }">
+                <el-button link type="danger" icon="Delete" size="small" @click="item.messages.splice(mi, 1)" />
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-button link type="primary" icon="Plus" size="small" style="margin-top: 4px" @click="item.messages.push({ sender: 'customer', messageType: 'text', content: '' })">添加消息</el-button>
+        </div>
         <el-button class="add-row-btn" icon="Plus" @click="addItem">增加客户</el-button>
       </template>
 
@@ -187,6 +207,7 @@
 </template>
 
 <script setup name="LiveReview">
+import { Loading } from '@element-plus/icons-vue'
 import { listReview, recognizeUpload, saveReviewResult, confirmReview } from '@/api/live/review'
 import { listStreamers } from '@/api/live/upload'
 
@@ -194,6 +215,7 @@ const { proxy } = getCurrentInstance()
 const baseApi = import.meta.env.VITE_APP_BASE_API
 
 const loading = ref(false)
+const recognizingId = ref(null)
 const rows = ref([])
 const total = ref(0)
 const streamers = ref([])
@@ -275,8 +297,12 @@ function resultSummary(row) {
     return '暂无明细'
   }
   return items.map(item => {
-    const suffix = row.uploadType === '1' ? ` ${Number(item.xu || 0).toLocaleString()}虚拟币` : ''
-    return `${item.nickname || '未命名'}${suffix}`
+    if (row.uploadType === '1') {
+      return `${item.nickname || '未命名'} ${Number(item.xu || 0).toLocaleString()}虚拟币`
+    }
+    const msgs = Array.isArray(item.messages) ? item.messages : []
+    const preview = msgs.slice(0, 2).map(m => m.content || '').filter(Boolean).join('; ')
+    return `${item.nickname || '未命名'}(${msgs.length}条)${preview ? ': ' + preview : ''}`
   }).join('、')
 }
 
@@ -314,9 +340,14 @@ function resetQuery() {
 }
 
 function handleMock(row) {
+  recognizingId.value = row.uploadId
+  row._recognizing = true
   recognizeUpload(row.uploadId).then(() => {
     proxy.$modal.msgSuccess('AI识别完成')
     loadList()
+  }).catch(() => {}).finally(() => {
+    recognizingId.value = null
+    row._recognizing = false
   })
 }
 
@@ -329,7 +360,12 @@ function openEditor(row) {
     nickname: item.nickname || '',
     badge: item.badge || '',
     xu: Number(item.xu || 0),
-    messageCount: Number(item.messageCount || 0)
+    messageCount: Number(item.messageCount || 0),
+    messages: Array.isArray(item.messages) ? item.messages.map(m => ({
+      sender: m.sender || 'customer',
+      messageType: m.messageType || 'text',
+      content: m.content || ''
+    })) : []
   })) : []
   editor.form.totalXu = Number(result.totalXu || 0)
   editor.form.rawText = result.rawText || row.rawText || ''
@@ -342,7 +378,8 @@ function addItem() {
     nickname: '',
     badge: '',
     xu: 0,
-    messageCount: 0
+    messageCount: 0,
+    messages: editor.form.type === 'chat' ? [{ sender: 'customer', messageType: 'text', content: '' }] : []
   })
 }
 
@@ -360,14 +397,24 @@ function buildAiResult() {
   }
   const items = editor.form.items
     .filter(item => item.nickname && item.nickname.trim())
-    .map((item, index) => ({
-      rankNo: Number(item.rankNo || index + 1),
-      nickname: item.nickname.trim(),
-      badge: item.badge || '',
-      xu: Number(item.xu || 0),
-      messageCount: Number(item.messageCount || 0),
-      confidence: 'manual'
-    }))
+    .map((item, index) => {
+      const base = {
+        rankNo: Number(item.rankNo || index + 1),
+        nickname: item.nickname.trim(),
+        badge: item.badge || '',
+        xu: Number(item.xu || 0),
+        messageCount: Number(item.messageCount || 0),
+        confidence: 'manual'
+      }
+      if (editor.form.type === 'chat' && Array.isArray(item.messages)) {
+        base.messages = item.messages.filter(m => m.content && m.content.trim()).map(m => ({
+          sender: m.sender,
+          messageType: m.messageType || 'text',
+          content: m.content
+        }))
+      }
+      return base
+    })
   return JSON.stringify({
     type: editor.form.type,
     items
@@ -458,5 +505,17 @@ loadList()
 
 .add-row-btn {
   margin-top: 12px;
+}
+
+.chat-customer-block {
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.chat-customer-header {
+  display: flex;
+  align-items: center;
 }
 </style>

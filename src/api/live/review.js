@@ -18,7 +18,8 @@ export function mockRecognize(uploadId) {
 export function recognizeUpload(uploadId) {
   return request({
     url: '/live/review/recognize/' + uploadId,
-    method: 'post'
+    method: 'post',
+    timeout: 120000
   })
 }
 
