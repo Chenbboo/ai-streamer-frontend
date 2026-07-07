@@ -12,9 +12,10 @@
           </el-col>
           <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="主播" required>
-              <el-select v-model="form.streamerId" placeholder="选择主播" style="width: 100%">
+              <el-select v-if="streamers.length > 1" v-model="form.streamerId" placeholder="选择主播" style="width: 100%">
                 <el-option v-for="s in streamers" :key="s.streamerId" :label="s.stageName" :value="s.streamerId" />
               </el-select>
+              <el-input v-else :model-value="streamers[0]?.stageName || ''" disabled style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
