@@ -119,11 +119,13 @@
 </template>
 
 <script setup name="LiveKpi">
+import { useI18n } from 'vue-i18n'
 import { listKpiConfig, getKpiConfig, addKpiConfig, updateKpiConfig, delKpiConfig } from '@/api/live/kpi'
 import { listStreamers } from '@/api/live/upload'
 import { Setting } from '@element-plus/icons-vue'
 
 const { proxy } = getCurrentInstance()
+const { t } = useI18n()
 
 const streamers = ref([])
 const kpiList = ref([])
@@ -161,11 +163,12 @@ function getStreamerColorStyle(streamerId) {
 
 /** 获取 KPI 显示文本 */
 function getKpiDisplay(streamerId, metric) {
+  const { t } = useI18n()
   const config = streamerConfigs.value[streamerId]
-  if (!config) return '未配置'
+  if (!config) return t('kpi.notConfigured')
   const daily = config[metric + 'Daily'] ?? '--'
   const monthly = config[metric + 'Monthly'] ?? '--'
-  return `日 ${daily} / 月 ${monthly}`
+  return `${t('kpi.daily')} ${daily} / ${t('kpi.monthly')} ${monthly}`
 }
 
 /** 加载 KPI 数据 */

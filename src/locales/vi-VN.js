@@ -215,6 +215,8 @@ export default {
     title: 'Cấu hình KPI',
     year: 'năm',
     month: 'tháng',
+    daily: 'Ngày',
+    monthly: 'Tháng',
     selectYear: 'Chọn năm',
     selectMonth: 'Chọn tháng',
     addDefault: 'Thêm cấu hình mặc định',

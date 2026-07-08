@@ -215,6 +215,8 @@ export default {
     title: 'KPI配置',
     year: '年',
     month: '月',
+    daily: '日',
+    monthly: '月',
     selectYear: '选择年份',
     selectMonth: '选择月份',
     addDefault: '添加默认配置',
