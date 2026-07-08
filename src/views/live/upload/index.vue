@@ -436,15 +436,14 @@ handleQuery()
   }
 
   .submit-button {
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    z-index: 20;
-    width: auto;
+    width: 100%;
     height: 44px;
     font-size: 16px;
-    box-shadow: 0 8px 22px rgba(64, 158, 255, 0.28);
+    border-radius: 8px;
+  }
+
+  .tip {
+    display: none;
   }
 
   .tip {

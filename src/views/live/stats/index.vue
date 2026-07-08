@@ -1406,8 +1406,219 @@ section {
 }
 
 @media (max-width: 760px) {
-  .report-header { padding: 22px 16px; }
-  main { padding: 14px 16px 28px; }
-  .streamer-row, .fan-section, .weiji-row { grid-template-columns: 1fr; }
+  .report-header {
+    padding: 16px;
+  }
+
+  .report-header h1 {
+    font-size: 20px;
+  }
+
+  .eyebrow {
+    font-size: 8px;
+  }
+
+  .meta-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .chip {
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+
+  main {
+    padding: 12px;
+  }
+
+  section {
+    margin-bottom: 24px;
+  }
+
+  .sec-title {
+    font-size: 8px;
+    margin-bottom: 12px;
+  }
+
+  .streamer-row,
+  .fan-section,
+  .weiji-row,
+  .ai-chat-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .sc {
+    padding: 12px;
+  }
+
+  .sc-name {
+    font-size: 11px;
+    margin-bottom: 8px;
+  }
+
+  .sc-diamond {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+
+  .sc-wow {
+    font-size: 10px;
+  }
+
+  .sc-divider {
+    margin: 8px 0;
+  }
+
+  .sc-section {
+    margin-bottom: 6px;
+  }
+
+  .sc-section-title {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+
+  .sc-fields-5 {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+  }
+
+  .sc-fields-5 .sc-stat-label {
+    font-size: 6px;
+  }
+
+  .sc-fields-5 .sc-stat-val {
+    font-size: 7px;
+  }
+
+  .chart-box {
+    height: auto;
+    min-height: 200px;
+  }
+
+  .fan-card {
+    padding: 12px;
+  }
+
+  .fan-name {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .fan-row {
+    padding: 6px 0;
+  }
+
+  .fan-label {
+    font-size: 11px;
+  }
+
+  .fan-val {
+    font-size: 13px;
+  }
+
+  .conv-label {
+    font-size: 10px;
+  }
+
+  .conv-pct {
+    font-size: 12px;
+  }
+
+  .weiji-card {
+    padding: 12px;
+  }
+
+  .weiji-card-header {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .weiji-stats {
+    gap: 8px;
+  }
+
+  .weiji-label {
+    font-size: 10px;
+  }
+
+  .weiji-val {
+    font-size: 14px;
+  }
+
+  .weiji-pct {
+    font-size: 10px;
+  }
+
+  .ai-chat-card {
+    padding: 12px;
+  }
+
+  .ai-chat-header {
+    padding: 10px 12px;
+  }
+
+  .ai-chat-name {
+    font-size: 13px;
+  }
+
+  .ai-chat-status {
+    font-size: 9px;
+  }
+
+  .ai-chat-messages {
+    padding: 12px;
+    min-height: 150px;
+    max-height: 250px;
+  }
+
+  .ai-msg-content {
+    font-size: 12px;
+  }
+
+  .ai-chat-input input {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .ai-chat-input button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* 弹窗优化 */
+  .modal-box {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .modal-title {
+    font-size: 14px;
+  }
+
+  .modal-sub {
+    font-size: 10px;
+  }
+
+  .modal-body table {
+    font-size: 11px;
+  }
+
+  .modal-body th,
+  .modal-body td {
+    padding: 6px 4px;
+  }
+
+  .forecast-badge {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+
+  .danger-tag {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
 }
 </style>
