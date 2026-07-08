@@ -1,4 +1,9 @@
 export default {
+  // 首页
+  home: {
+    title: '上海美丸文化管理系统',
+    subtitle: '欢迎使用，请从左侧菜单选择功能'
+  },
   // 登录
   login: {
     username: '账号',
@@ -111,6 +116,7 @@ export default {
     notRecognized: '未识别',
     aiRecognize: 'AI识别',
     correct: '校正',
+    corrected: '已校正',
     confirm入库: '确认入库',
     mergeCustomer: '合并客户',
     correctTitle: '识别结果校正',

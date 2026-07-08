@@ -1,8 +1,8 @@
 <template>
   <div class="app-container home">
     <div class="welcome">
-      <h1>AI 主播直播数据统计后台</h1>
-      <p>欢迎使用，请从左侧菜单选择功能</p>
+      <h1>{{ $t('home.title') }}</h1>
+      <p>{{ $t('home.subtitle') }}</p>
     </div>
   </div>
 </template>

@@ -233,11 +233,13 @@
 
 <script setup name="LiveReview">
 import { Loading } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
 import { listReview, recognizeUpload, saveReviewResult, confirmReview } from '@/api/live/review'
 import { listStreamers } from '@/api/live/upload'
 import { listCustomers, mergeCustomers as mergeCustomersApi } from '@/api/live/customer'
 
 const { proxy } = getCurrentInstance()
+const { t } = useI18n()
 const baseApi = import.meta.env.VITE_APP_BASE_API
 
 const loading = ref(false)
@@ -275,26 +277,26 @@ const merge = reactive({
   secondaryId: undefined
 })
 
-const typeOptions = [
-  { value: '1', label: '打赏榜截图' },
-  { value: '2', label: '聊天截图' },
-  { value: '3', label: '汇报文本' }
-]
+const typeOptions = computed(() => [
+  { value: '1', label: t('upload.giftScreenshot') },
+  { value: '2', label: t('upload.chatScreenshot') },
+  { value: '3', label: t('upload.reportText') }
+])
 
-const statusOptions = [
-  { value: '0', label: '待识别' },
-  { value: '1', label: '已识别' },
-  { value: '2', label: '已校正' },
-  { value: '3', label: '识别失败' },
-  { value: '4', label: '识别中' }
-]
+const statusOptions = computed(() => [
+  { value: '0', label: t('upload.pending') },
+  { value: '1', label: t('upload.recognized') },
+  { value: '2', label: t('review.corrected') },
+  { value: '3', label: t('upload.failed') },
+  { value: '4', label: t('review.recognizing') }
+])
 
 function typeLabel(v) {
-  return (typeOptions.find(t => t.value === v) || {}).label || v
+  return (typeOptions.value.find(t => t.value === v) || {}).label || v
 }
 
 function statusLabel(v) {
-  return (statusOptions.find(s => s.value === v) || {}).label || v
+  return (statusOptions.value.find(s => s.value === v) || {}).label || v
 }
 
 function statusTag(v) {

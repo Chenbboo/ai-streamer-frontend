@@ -1,4 +1,9 @@
 export default {
+  // 首页
+  home: {
+    title: 'Hệ thống quản lý văn hóa Shanghai Meiwan',
+    subtitle: 'Chào mừng, vui lòng chọn chức năng từ menu bên trái'
+  },
   // 登录
   login: {
     username: 'Tài khoản',
@@ -111,6 +116,7 @@ export default {
     notRecognized: 'Chưa nhận dạng',
     aiRecognize: 'Nhận dạng AI',
     correct: 'Chỉnh sửa',
+    corrected: 'Đã chỉnh sửa',
     confirm入库: 'Xác nhận lưu',
     mergeCustomer: 'Gộp khách hàng',
     correctTitle: 'Chỉnh sửa kết quả nhận dạng',
