@@ -297,10 +297,13 @@
 
 <script setup name="LiveStats">
 import * as echarts from 'echarts'
+import { useI18n } from 'vue-i18n'
 import { weeklyStats, streamerCardDetail, highValueUsers, newTippers, weijiStats, weijiMonthStats, weijiDetail, adviceData } from '@/api/live/stats'
 import { getToken } from '@/utils/auth'
 import { listStreamers } from '@/api/live/upload'
 import { listKpiConfig, addKpiConfig, updateKpiConfig } from '@/api/live/kpi'
+
+const { t } = useI18n()
 
 const STREAMER_COLORS = {
   100: '#2D8C2D',  // Zhenzhen
@@ -411,9 +414,10 @@ function getWowRate(card) {
 }
 
 function getWowText(card) {
+  const { t } = useI18n()
   const wow = getWowRate(card)
-  if (wow === 0) return '持平'
-  return (wow > 0 ? '▲ +' : '▼ ') + Math.abs(wow) + '% vs 上周同期'
+  if (wow === 0) return t('stats.flat')
+  return (wow > 0 ? '▲ +' : '▼ ') + Math.abs(wow) + '% ' + t('stats.vsLastWeek')
 }
 
 function getWowPct(card) {
