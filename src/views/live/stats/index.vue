@@ -324,6 +324,11 @@ const trendChartRef = ref(null)
 const trendChartRef2 = ref(null)
 let trendChart = null
 let trendChart2 = null
+const handleTrendResize = () => {
+  if (trendChart) {
+    trendChart.resize()
+  }
+}
 
 const today = new Date()
 today.setDate(today.getDate() - 1)
@@ -501,7 +506,7 @@ function renderTrend() {
   if (!trendChartRef.value) return
   if (!trendChart) {
     trendChart = echarts.init(trendChartRef.value)
-    window.addEventListener('resize', () => trendChart && trendChart.resize())
+    window.addEventListener('resize', handleTrendResize)
   }
   const dates = [...new Set(trend.value.map(item => item.bizDate))]
   const names = [...new Set(trend.value.map(item => item.stageName))]
@@ -699,6 +704,18 @@ async function openWeijiDetail(streamerId, mode) {
     weijiDetailDialog.open = true
   } catch (e) { console.error(e) }
 }
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleTrendResize)
+  if (trendChart) {
+    trendChart.dispose()
+    trendChart = null
+  }
+  if (trendChart2) {
+    trendChart2.dispose()
+    trendChart2 = null
+  }
+})
 </script>
 
 <style scoped>
