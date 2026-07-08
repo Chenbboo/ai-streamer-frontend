@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-popover ref="noticePopover" placement="bottom-end" :width="320" trigger="manual" v-model:visible="noticeVisible" popper-class="notice-popover">
+    <el-popover ref="noticePopover" placement="bottom-end" :width="320" trigger="click" v-model:visible="noticeVisible" popper-class="notice-popover">
       <!-- 弹出内容 -->
       <div class="notice-header">
         <span class="notice-title">通知公告</span>
@@ -25,7 +25,7 @@
 
       <!-- 触发器 -->
       <template #reference>
-        <div class="right-menu-item hover-effect notice-trigger" @mouseenter="onNoticeEnter" @mouseleave="onNoticeLeave">
+        <div class="right-menu-item hover-effect notice-trigger">
           <svg-icon icon-class="bell" />
           <span v-if="unreadCount > 0" class="notice-badge">{{ unreadCount }}</span>
         </div>
@@ -46,7 +46,6 @@ const noticeList = ref([])
 const unreadCount = ref(0)
 const noticeLoading = ref(false)
 const noticeVisible = ref(false)
-const noticeLeaveTimer = ref(null)
 const { proxy } = getCurrentInstance()
 
 // 加载顶部公告列表
@@ -61,27 +60,6 @@ function loadNoticeTop() {
 }
 
 onMounted(() => loadNoticeTop())
-
-// 鼠标移入铃铛区域
-function onNoticeEnter() {
-  clearTimeout(noticeLeaveTimer.value)
-  noticeVisible.value = true
-  nextTick(() => {
-    const popper = noticePopover.value?.popperRef?.contentRef
-    if (popper && !popper._noticeBound) {
-      popper._noticeBound = true
-      popper.addEventListener('mouseenter', () => clearTimeout(noticeLeaveTimer.value))
-      popper.addEventListener('mouseleave', () => {
-        noticeLeaveTimer.value = setTimeout(() => { noticeVisible.value = false }, 100)
-      })
-    }
-  })
-}
-
-// 鼠标离开铃铛区域
-function onNoticeLeave() {
-  noticeLeaveTimer.value = setTimeout(() => { noticeVisible.value = false }, 150)
-}
 
 // 预览公告详情
 function previewNotice(item) {
