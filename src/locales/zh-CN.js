@@ -245,6 +245,23 @@ export default {
     newTipDaily: '新增打赏日KPI',
     newTipMonthly: '新增打赏月KPI'
   },
+  // 通知公告
+  notice: {
+    title: '公告标题',
+    titlePlaceholder: '请输入公告标题',
+    operator: '操作人员',
+    operatorPlaceholder: '请输入操作人员',
+    type: '类型',
+    typePlaceholder: '公告类型',
+    id: '序号',
+    noticeTitle: '公告标题',
+    noticeType: '公告类型',
+    status: '状态',
+    createBy: '创建者',
+    createTime: '创建时间',
+    readUsers: '阅读用户',
+    content: '内容'
+  },
   // 主播管理
   streamer: {
     title: '主播管理',

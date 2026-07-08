@@ -245,6 +245,23 @@ export default {
     newTipDaily: 'KPI tip mới ngày',
     newTipMonthly: 'KPI tip mới tháng'
   },
+  // 通知公告
+  notice: {
+    title: 'Tiêu đề thông báo',
+    titlePlaceholder: 'Nhập tiêu đề thông báo',
+    operator: 'Người thao tác',
+    operatorPlaceholder: 'Nhập người thao tác',
+    type: 'Loại',
+    typePlaceholder: 'Loại thông báo',
+    id: 'STT',
+    noticeTitle: 'Tiêu đề thông báo',
+    noticeType: 'Loại thông báo',
+    status: 'Trạng thái',
+    createBy: 'Người tạo',
+    createTime: 'Thời gian tạo',
+    readUsers: 'Người đã đọc',
+    content: 'Nội dung'
+  },
   // 主播管理
   streamer: {
     title: 'Quản lý streamer',
