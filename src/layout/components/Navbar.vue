@@ -27,17 +27,17 @@
           </template>
         </el-dropdown>
 
-        <header-search id="header-search" class="right-menu-item" />
+        <header-search id="header-search" class="right-menu-item hide-on-mobile" />
 
         <el-tooltip content="源码地址" effect="dark" placement="bottom">
-          <ruo-yi-git id="ruoyi-git" class="right-menu-item hover-effect" />
+          <ruo-yi-git id="ruoyi-git" class="right-menu-item hover-effect hide-on-mobile" />
         </el-tooltip>
 
         <el-tooltip content="文档地址" effect="dark" placement="bottom">
-          <ruo-yi-doc id="ruoyi-doc" class="right-menu-item hover-effect" />
+          <ruo-yi-doc id="ruoyi-doc" class="right-menu-item hover-effect hide-on-mobile" />
         </el-tooltip>
 
-        <screenfull id="screenfull" class="right-menu-item hover-effect" />
+        <screenfull id="screenfull" class="right-menu-item hover-effect hide-on-mobile" />
 
         <el-tooltip content="主题模式" effect="dark" placement="bottom">
           <div class="right-menu-item hover-effect theme-switch-wrapper" @click="toggleTheme">
@@ -354,6 +354,12 @@ async function toggleTheme(event) {
         }
       }
     }
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
   }
 }
 </style>
