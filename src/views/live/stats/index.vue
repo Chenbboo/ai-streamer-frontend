@@ -28,10 +28,10 @@
               <div class="sc-section-title">送礼</div>
               <div class="sc-fields sc-fields-5">
                 <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.dailyXu) }}</div></div>
-                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.dailyXu, 10000) }}%</div></div>
+                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.dailyXu, getStreamerKpi(card.streamerId, 'giftDaily')) }}%</div></div>
                 <div><div class="sc-stat-label">月</div><div class="sc-stat-val">{{ fmt(card.monthlyXu) }}</div></div>
                 <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val" :class="getWowClass(card)">{{ getWowPct(card) }}</div></div>
-                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.monthlyXu, 260000) }}%</div></div>
+                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.monthlyXu, getStreamerKpi(card.streamerId, 'giftMonthly')) }}%</div></div>
               </div>
             </div>
             <!-- 新增粉丝 -->
@@ -39,10 +39,10 @@
               <div class="sc-section-title">新增粉丝</div>
               <div class="sc-fields sc-fields-5">
                 <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.newFanDaily) }}</div></div>
-                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.newFanDaily, 10) }}%</div></div>
+                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.newFanDaily, getStreamerKpi(card.streamerId, 'newFanDaily')) }}%</div></div>
                 <div><div class="sc-stat-label">月</div><div class="sc-stat-val">{{ fmt(card.newFanMonthly) }}</div></div>
                 <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val">{{ getGrowthRate(card.newFanWeekly, card.newFanLastWeek) }}</div></div>
-                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.newFanMonthly, 260) }}%</div></div>
+                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.newFanMonthly, getStreamerKpi(card.streamerId, 'newFanMonthly')) }}%</div></div>
               </div>
             </div>
             <!-- 新增互动人数 -->
@@ -50,21 +50,21 @@
               <div class="sc-section-title">新增互动人数</div>
               <div class="sc-fields sc-fields-5">
                 <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.chatDaily) }}</div></div>
-                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.chatDaily, 5) }}%</div></div>
+                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.chatDaily, getStreamerKpi(card.streamerId, 'chatDaily')) }}%</div></div>
                 <div><div class="sc-stat-label">月</div><div class="sc-stat-val">{{ fmt(card.chatMonthly) }}</div></div>
                 <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val">{{ getGrowthRate(card.chatWeekly, card.chatLastWeek) }}</div></div>
-                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.chatMonthly, 130) }}%</div></div>
+                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.chatMonthly, getStreamerKpi(card.streamerId, 'chatMonthly')) }}%</div></div>
               </div>
             </div>
             <!-- 新增用户打赏 -->
             <div class="sc-section">
               <div class="sc-section-title">新增用户打赏</div>
               <div class="sc-fields sc-fields-5">
-                <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.newTipDaily) }}</div></div>
-                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">--</div></div>
-                <div><div class="sc-stat-label">月</div><div class="sc-stat-val"><span class="clickable" @click="openNewTippersDialog(card.streamerId)">{{ fmt(card.newTipMonthly) }}</span></div></div>
-                <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val">{{ getGrowthRate(card.newTipWeekly, card.newTipLastWeek) }}</div></div>
-                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">--</div></div>
+                <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.newTipDailyAmount) }}</div></div>
+                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.newTipDailyAmount, getStreamerKpi(card.streamerId, 'newTipDaily')) }}%</div></div>
+                <div><div class="sc-stat-label">月</div><div class="sc-stat-val"><span class="clickable" @click="openNewTippersDialog(card.streamerId)">{{ fmt(card.newTipMonthlyAmount) }}</span></div></div>
+                <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val">{{ getGrowthRate(card.newTipWeeklyAmount, card.newTipLastWeekAmount) }}</div></div>
+                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.newTipMonthlyAmount, getStreamerKpi(card.streamerId, 'newTipMonthly')) }}%</div></div>
               </div>
             </div>
           </div>
@@ -300,6 +300,7 @@ import * as echarts from 'echarts'
 import { weeklyStats, streamerCardDetail, highValueUsers, newTippers, weijiStats, weijiMonthStats, weijiDetail, adviceData } from '@/api/live/stats'
 import { getToken } from '@/utils/auth'
 import { listStreamers } from '@/api/live/upload'
+import { listKpiConfig, addKpiConfig, updateKpiConfig } from '@/api/live/kpi'
 
 const STREAMER_COLORS = {
   100: '#2D8C2D',  // Zhenzhen
@@ -346,6 +347,36 @@ const chatMessages = reactive({})
 const chatInputs = reactive({})
 const chatLoading = reactive({})
 const chatRefs = reactive({})
+
+// KPI 配置（按主播）
+const kpiConfigs = ref({})
+
+// 加载 KPI 配置
+async function loadKpiConfig() {
+  try {
+    const year = today.getFullYear()
+    const month = today.getMonth() + 1
+    const res = await listKpiConfig({ kpiYear: year, kpiMonth: month })
+    if (res.rows && res.rows.length > 0) {
+      // 按主播ID分组
+      const configs = {}
+      res.rows.forEach(c => {
+        if (c.streamerId) {
+          configs[c.streamerId] = c
+        }
+      })
+      kpiConfigs.value = configs
+    }
+  } catch (e) {
+    console.error('加载 KPI 配置失败:', e)
+  }
+}
+
+// 获取主播 KPI
+function getStreamerKpi(streamerId, metric) {
+  const config = kpiConfigs.value[streamerId]
+  return config ? (config[metric] || 0) : 0
+}
 
 // 初始化主播聊天数据
 function initChat(streamerId) {
@@ -510,6 +541,7 @@ async function openNewTippersDialog(streamerId) {
 }
 
 listStreamers().then(res => { streamers.value = res.data || [] })
+loadKpiConfig()
 loadData()
 loadWeijiData()
 
