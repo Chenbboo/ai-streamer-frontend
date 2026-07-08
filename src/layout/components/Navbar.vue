@@ -10,6 +10,24 @@
 
     <div class="right-menu">
       <template v-if="appStore.device !== 'mobile'">
+        <!-- 语言切换 -->
+        <el-dropdown @command="handleLanguageChange" class="right-menu-item hover-effect language-switch">
+          <span class="language-text">
+            {{ currentLangLabel }}
+            <el-icon class="language-icon"><ArrowDown /></el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="zh-CN" :disabled="language === 'zh-CN'">
+                中文
+              </el-dropdown-item>
+              <el-dropdown-item command="vi-VN" :disabled="language === 'vi-VN'">
+                Tiếng Việt
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+
         <header-search id="header-search" class="right-menu-item" />
 
         <el-tooltip content="源码地址" effect="dark" placement="bottom">
@@ -66,6 +84,9 @@
 
 <script setup>
 import { ElMessageBox } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
+import Cookies from 'js-cookie'
 import Breadcrumb from '@/components/Breadcrumb'
 import TopNav from './TopNav'
 import TopBar from './TopBar'
@@ -88,6 +109,17 @@ const appStore = useAppStore()
 const userStore = useUserStore()
 const lockStore = useLockStore()
 const settingsStore = useSettingsStore()
+const { locale } = useI18n()
+
+const language = ref(Cookies.get('language') || 'zh-CN')
+const currentLangLabel = computed(() => language.value === 'zh-CN' ? '中文' : 'Tiếng Việt')
+
+function handleLanguageChange(lang) {
+  language.value = lang
+  locale.value = lang
+  Cookies.set('language', lang)
+  location.reload()
+}
 
 function toggleSideBar() {
   appStore.toggleSideBar()
@@ -259,10 +291,33 @@ async function toggleTheme(event) {
 
         svg {
           transition: transform 0.3s;
-          
+
           &:hover {
             transform: scale(1.15);
           }
+        }
+      }
+
+      &.language-switch {
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+
+        .language-text {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 13px;
+          color: #5a5e66;
+          cursor: pointer;
+
+          &:hover {
+            color: var(--el-color-primary);
+          }
+        }
+
+        .language-icon {
+          font-size: 12px;
         }
       }
     }

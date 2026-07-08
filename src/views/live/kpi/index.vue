@@ -4,13 +4,13 @@
     <div class="kpi-header">
       <div class="kpi-header-left">
         <el-select v-model="selectedYear" style="width: 100px" @change="loadKpiData">
-          <el-option v-for="y in yearOptions" :key="y" :label="y + '年'" :value="y" />
+          <el-option v-for="y in yearOptions" :key="y" :label="y + $t('kpi.year')" :value="y" />
         </el-select>
         <el-select v-model="selectedMonth" style="width: 80px" @change="loadKpiData">
-          <el-option v-for="m in 12" :key="m" :label="m + '月'" :value="m" />
+          <el-option v-for="m in 12" :key="m" :label="m + $t('kpi.month')" :value="m" />
         </el-select>
       </div>
-      <el-button type="primary" icon="Plus" @click="handleAddAll">为所有主播添加</el-button>
+      <el-button type="primary" icon="Plus" @click="handleAddAll">{{ $t('kpi.addAll') }}</el-button>
     </div>
 
     <!-- 主播 KPI 卡片 -->
@@ -23,24 +23,24 @@
             <span>{{ streamer.stageName }}</span>
           </div>
           <div class="kpi-card-actions">
-            <el-button link type="primary" icon="Edit" @click="handleUpdateStreamer(streamer)">编辑</el-button>
+            <el-button link type="primary" icon="Edit" @click="handleUpdateStreamer(streamer)">{{ $t('common.edit') }}</el-button>
           </div>
         </div>
         <div class="kpi-card-body">
           <div class="kpi-item">
-            <span class="kpi-label">送礼</span>
+            <span class="kpi-label">{{ $t('kpi.gift') }}</span>
             <span class="kpi-value">{{ getKpiDisplay(streamer.streamerId, 'gift') }}</span>
           </div>
           <div class="kpi-item">
-            <span class="kpi-label">新增粉丝</span>
+            <span class="kpi-label">{{ $t('kpi.newFan') }}</span>
             <span class="kpi-value">{{ getKpiDisplay(streamer.streamerId, 'newFan') }}</span>
           </div>
           <div class="kpi-item">
-            <span class="kpi-label">新增互动</span>
+            <span class="kpi-label">{{ $t('kpi.chat') }}</span>
             <span class="kpi-value">{{ getKpiDisplay(streamer.streamerId, 'chat') }}</span>
           </div>
           <div class="kpi-item">
-            <span class="kpi-label">新增打赏</span>
+            <span class="kpi-label">{{ $t('kpi.newTip') }}</span>
             <span class="kpi-value">{{ getKpiDisplay(streamer.streamerId, 'newTip') }}</span>
           </div>
         </div>
@@ -50,59 +50,59 @@
     <!-- 添加或修改对话框 -->
     <el-dialog :title="title" v-model="open" width="600px" append-to-body>
       <el-form ref="kpiRef" :model="form" :rules="rules" label-width="120px">
-        <el-form-item label="主播" prop="streamerId">
-          <el-select v-model="form.streamerId" placeholder="默认配置(所有主播)" clearable style="width: 100%">
+        <el-form-item :label="$t('kpi.streamer')" prop="streamerId">
+          <el-select v-model="form.streamerId" :placeholder="$t('kpi.defaultConfig')" clearable style="width: 100%">
             <el-option v-for="s in streamers" :key="s.streamerId" :label="s.stageName" :value="s.streamerId" />
           </el-select>
         </el-form-item>
-        <el-divider content-position="center">送礼 (Xu)</el-divider>
+        <el-divider content-position="center">{{ $t('kpi.gift') }} (Xu)</el-divider>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="日KPI" prop="giftDaily">
+            <el-form-item :label="$t('kpi.dailyKPI')" prop="giftDaily">
               <el-input-number v-model="form.giftDaily" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="月KPI" prop="giftMonthly">
+            <el-form-item :label="$t('kpi.monthlyKPI')" prop="giftMonthly">
               <el-input-number v-model="form.giftMonthly" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
-        <el-divider content-position="center">新增粉丝</el-divider>
+        <el-divider content-position="center">{{ $t('kpi.newFan') }}</el-divider>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="日KPI" prop="newFanDaily">
+            <el-form-item :label="$t('kpi.dailyKPI')" prop="newFanDaily">
               <el-input-number v-model="form.newFanDaily" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="月KPI" prop="newFanMonthly">
+            <el-form-item :label="$t('kpi.monthlyKPI')" prop="newFanMonthly">
               <el-input-number v-model="form.newFanMonthly" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
-        <el-divider content-position="center">新增互动</el-divider>
+        <el-divider content-position="center">{{ $t('kpi.chat') }}</el-divider>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="日KPI" prop="chatDaily">
+            <el-form-item :label="$t('kpi.dailyKPI')" prop="chatDaily">
               <el-input-number v-model="form.chatDaily" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="月KPI" prop="chatMonthly">
+            <el-form-item :label="$t('kpi.monthlyKPI')" prop="chatMonthly">
               <el-input-number v-model="form.chatMonthly" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
-        <el-divider content-position="center">新增打赏 (Xu)</el-divider>
+        <el-divider content-position="center">{{ $t('kpi.newTip') }} (Xu)</el-divider>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="日KPI" prop="newTipDaily">
+            <el-form-item :label="$t('kpi.dailyKPI')" prop="newTipDaily">
               <el-input-number v-model="form.newTipDaily" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="月KPI" prop="newTipMonthly">
+            <el-form-item :label="$t('kpi.monthlyKPI')" prop="newTipMonthly">
               <el-input-number v-model="form.newTipMonthly" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
@@ -110,8 +110,8 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
+          <el-button type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
+          <el-button @click="cancel">{{ $t('common.cancel') }}</el-button>
         </div>
       </template>
     </el-dialog>

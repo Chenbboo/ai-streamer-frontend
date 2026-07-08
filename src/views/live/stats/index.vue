@@ -2,69 +2,69 @@
   <div class="report-page">
     <!-- Header -->
     <header class="report-header">
-      <div class="eyebrow">Weekly Report · 主播运营周报</div>
-      <h1>第{{ currentWeek }}周内容情况</h1>
-      <div class="period">数据截至{{ today }}</div>
+      <div class="eyebrow">Weekly Report · {{ $t('stats.weeklyReport') }}</div>
+      <h1>{{ $t('stats.weekNumber', { n: currentWeek }) }}</h1>
+      <div class="period">{{ $t('stats.dataAsOf', { date: today }) }}</div>
       <div class="meta-row">
-        <span class="chip">{{ streamers.length }}主播</span>
-        <span class="chip">本周 {{ fmt(overview.totalXu) }} 钻</span>
-        <span class="chip">月累计 {{ fmt(monthlyTotal) }} 钻</span>
+        <span class="chip">{{ $t('stats.streamerCount', { n: streamers.length }) }}</span>
+        <span class="chip">{{ $t('stats.weeklyDiamond', { n: fmt(overview.totalXu) }) }}</span>
+        <span class="chip">{{ $t('stats.monthlyDiamond', { n: fmt(monthlyTotal) }) }}</span>
       </div>
     </header>
 
     <main>
       <!-- 01 主播卡片 -->
       <section>
-        <div class="sec-title">01 · 本周各主播一览</div>
+        <div class="sec-title">{{ $t('stats.section01') }}</div>
         <div class="streamer-row">
           <div class="sc" v-for="card in cardDetails" :key="card.streamerId" :style="'--c:' + getStreamerColor(card.streamerId)">
-            <div class="forecast-badge" :class="getForecastClass(card)">月底 {{ getForecastPct(card) }}%</div>
+            <div class="forecast-badge" :class="getForecastClass(card)">{{ $t('stats.monthEndForecast', { n: getForecastPct(card) }) }}</div>
             <div class="sc-name">{{ card.stageName }}</div>
             <div class="sc-diamond">{{ fmt(card.weeklyXu) }}</div>
             <div class="sc-wow" :class="getWowClass(card)">{{ getWowText(card) }}</div>
             <hr class="sc-divider">
             <!-- 送礼 -->
             <div class="sc-section">
-              <div class="sc-section-title">送礼</div>
+              <div class="sc-section-title">{{ $t('stats.gift') }}</div>
               <div class="sc-fields sc-fields-5">
-                <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.dailyXu) }}</div></div>
-                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.dailyXu, getStreamerKpi(card.streamerId, 'giftDaily')) }}%</div></div>
-                <div><div class="sc-stat-label">月</div><div class="sc-stat-val">{{ fmt(card.monthlyXu) }}</div></div>
-                <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val" :class="getWowClass(card)">{{ getWowPct(card) }}</div></div>
-                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.monthlyXu, getStreamerKpi(card.streamerId, 'giftMonthly')) }}%</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.daily') }}</div><div class="sc-stat-val">{{ fmt(card.dailyXu) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.dailyKPI') }}</div><div class="sc-stat-val">{{ getDailyKpiPct(card.dailyXu, getStreamerKpi(card.streamerId, 'giftDaily')) }}%</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.monthly') }}</div><div class="sc-stat-val">{{ fmt(card.monthlyXu) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.growth') }}</div><div class="sc-stat-val" :class="getWowClass(card)">{{ getWowPct(card) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.kpiComplete') }}</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.monthlyXu, getStreamerKpi(card.streamerId, 'giftMonthly')) }}%</div></div>
               </div>
             </div>
             <!-- 新增粉丝 -->
             <div class="sc-section">
-              <div class="sc-section-title">新增粉丝</div>
+              <div class="sc-section-title">{{ $t('stats.newFans') }}</div>
               <div class="sc-fields sc-fields-5">
-                <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.newFanDaily) }}</div></div>
-                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.newFanDaily, getStreamerKpi(card.streamerId, 'newFanDaily')) }}%</div></div>
-                <div><div class="sc-stat-label">月</div><div class="sc-stat-val">{{ fmt(card.newFanMonthly) }}</div></div>
-                <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val">{{ getGrowthRate(card.newFanWeekly, card.newFanLastWeek) }}</div></div>
-                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.newFanMonthly, getStreamerKpi(card.streamerId, 'newFanMonthly')) }}%</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.daily') }}</div><div class="sc-stat-val">{{ fmt(card.newFanDaily) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.dailyKPI') }}</div><div class="sc-stat-val">{{ getDailyKpiPct(card.newFanDaily, getStreamerKpi(card.streamerId, 'newFanDaily')) }}%</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.monthly') }}</div><div class="sc-stat-val">{{ fmt(card.newFanMonthly) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.growth') }}</div><div class="sc-stat-val">{{ getGrowthRate(card.newFanWeekly, card.newFanLastWeek) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.kpiComplete') }}</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.newFanMonthly, getStreamerKpi(card.streamerId, 'newFanMonthly')) }}%</div></div>
               </div>
             </div>
             <!-- 新增互动人数 -->
             <div class="sc-section">
-              <div class="sc-section-title">新增互动人数</div>
+              <div class="sc-section-title">{{ $t('stats.newChat') }}</div>
               <div class="sc-fields sc-fields-5">
-                <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.chatDaily) }}</div></div>
-                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.chatDaily, getStreamerKpi(card.streamerId, 'chatDaily')) }}%</div></div>
-                <div><div class="sc-stat-label">月</div><div class="sc-stat-val">{{ fmt(card.chatMonthly) }}</div></div>
-                <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val">{{ getGrowthRate(card.chatWeekly, card.chatLastWeek) }}</div></div>
-                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.chatMonthly, getStreamerKpi(card.streamerId, 'chatMonthly')) }}%</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.daily') }}</div><div class="sc-stat-val">{{ fmt(card.chatDaily) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.dailyKPI') }}</div><div class="sc-stat-val">{{ getDailyKpiPct(card.chatDaily, getStreamerKpi(card.streamerId, 'chatDaily')) }}%</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.monthly') }}</div><div class="sc-stat-val">{{ fmt(card.chatMonthly) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.growth') }}</div><div class="sc-stat-val">{{ getGrowthRate(card.chatWeekly, card.chatLastWeek) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.kpiComplete') }}</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.chatMonthly, getStreamerKpi(card.streamerId, 'chatMonthly')) }}%</div></div>
               </div>
             </div>
             <!-- 新增用户打赏 -->
             <div class="sc-section">
-              <div class="sc-section-title">新增用户打赏</div>
+              <div class="sc-section-title">{{ $t('stats.newTip') }}</div>
               <div class="sc-fields sc-fields-5">
-                <div><div class="sc-stat-label">日</div><div class="sc-stat-val">{{ fmt(card.newTipDailyAmount) }}</div></div>
-                <div><div class="sc-stat-label">日KPI</div><div class="sc-stat-val">{{ getDailyKpiPct(card.newTipDailyAmount, getStreamerKpi(card.streamerId, 'newTipDaily')) }}%</div></div>
-                <div><div class="sc-stat-label">月</div><div class="sc-stat-val"><span class="clickable" @click="openNewTippersDialog(card.streamerId)">{{ fmt(card.newTipMonthlyAmount) }}</span></div></div>
-                <div><div class="sc-stat-label">增长率</div><div class="sc-stat-val">{{ getGrowthRate(card.newTipWeeklyAmount, card.newTipLastWeekAmount) }}</div></div>
-                <div><div class="sc-stat-label">KPI完成</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.newTipMonthlyAmount, getStreamerKpi(card.streamerId, 'newTipMonthly')) }}%</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.daily') }}</div><div class="sc-stat-val">{{ fmt(card.newTipDailyAmount) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.dailyKPI') }}</div><div class="sc-stat-val">{{ getDailyKpiPct(card.newTipDailyAmount, getStreamerKpi(card.streamerId, 'newTipDaily')) }}%</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.monthly') }}</div><div class="sc-stat-val"><span class="clickable" @click="openNewTippersDialog(card.streamerId)">{{ fmt(card.newTipMonthlyAmount) }}</span></div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.growth') }}</div><div class="sc-stat-val">{{ getGrowthRate(card.newTipWeeklyAmount, card.newTipLastWeekAmount) }}</div></div>
+                <div><div class="sc-stat-label">{{ $t('stats.kpiComplete') }}</div><div class="sc-stat-val">{{ getMonthlyKpiPct(card.newTipMonthlyAmount, getStreamerKpi(card.streamerId, 'newTipMonthly')) }}%</div></div>
               </div>
             </div>
           </div>
@@ -73,10 +73,10 @@
 
       <!-- 02 每日走势 -->
       <section>
-        <div class="sec-title">02 · 本月每日走势</div>
+        <div class="sec-title">{{ $t('stats.section02') }}</div>
         <div class="chart-box">
-          <div class="chart-title">每日钻石走势</div>
-          <div class="chart-sub">各主播每日实际钻石收入</div>
+          <div class="chart-title">{{ $t('stats.dailyDiamondTrend') }}</div>
+          <div class="chart-sub">{{ $t('stats.dailyDiamondSub') }}</div>
           <div class="legend">
             <span v-for="s in streamers" :key="s.streamerId">
               <span class="ldot" :style="{background: getStreamerColor(s.streamerId)}"></span>{{ s.stageName }}
@@ -90,25 +90,25 @@
 
       <!-- 03 粉丝转化 -->
       <section>
-        <div class="sec-title">03 · 月累计送礼粉丝 & 转化率</div>
+        <div class="sec-title">{{ $t('stats.section03') }}</div>
         <div class="fan-section">
           <div class="fan-card" v-for="item in customerCards" :key="item.streamerId" :style="'--c:' + getStreamerColor(item.streamerId)">
-            <div class="danger-tag" v-if="getConversionRate(item) < 30">⚠ 危险</div>
+            <div class="danger-tag" v-if="getConversionRate(item) < 30">{{ $t('stats.danger') }}</div>
             <div class="fan-name">{{ item.stageName }}</div>
             <div class="fan-row">
-              <span class="fan-label">月累计互动（去重）</span>
+              <span class="fan-label">{{ $t('stats.activeCustomers') }}</span>
               <span class="fan-val">{{ fmt(item.chatCustomers) }}</span>
             </div>
             <div class="fan-row">
-              <span class="fan-label">月累计送礼（去重）</span>
+              <span class="fan-label">{{ $t('stats.giftCustomers') }}</span>
               <span class="fan-val" :style="{color: getStreamerColor(item.streamerId)}">{{ fmt(item.activeCustomers) }}</span>
             </div>
             <div class="fan-row">
-              <span class="fan-label">中高级用户（≥1000）</span>
+              <span class="fan-label">{{ $t('stats.highValueUsers') }}（≥1000）</span>
               <span class="fan-val clickable" :style="{color: getStreamerColor(item.streamerId)}" @click="openHighValueDialog(item.streamerId)">{{ fmt(item.highValueCustomers) }}</span>
             </div>
             <div class="conv-wrap">
-              <div class="conv-label">互动 → 中高级用户转化率</div>
+              <div class="conv-label">{{ $t('stats.conversionRate') }}</div>
               <div class="conv-track">
                 <div class="conv-fill" :style="{width: getConversionRate(item) + '%', background: getStreamerColor(item.streamerId)}"></div>
               </div>
@@ -120,26 +120,26 @@
 
       <!-- 04 当日维系情况 -->
       <section>
-        <div class="sec-title">04 · 当日维系情况 <span style="font-size:12px;color:#99998F;font-weight:400">（仅统计打赏>1000，点击红色数字查看全部）</span></div>
+        <div class="sec-title">{{ $t('stats.section04') }} <span style="font-size:12px;color:#99998F;font-weight:400">（{{ $t('stats.weijiTip') }}）</span></div>
         <div class="weiji-row" v-if="weijiDayStats.length > 0">
           <div class="weiji-card" v-for="w in weijiDayStats" :key="w.streamerId" :style="'--c:' + getStreamerColor(w.streamerId)">
             <div class="weiji-card-header">{{ w.stageName }}</div>
             <div class="weiji-stats">
               <div class="weiji-stat">
                 <div class="weiji-dot red"></div>
-                <div><div class="weiji-label">有打赏+无互动</div><div class="weiji-val weiji-clickable" style="color:#DC2626" @click="openWeijiDetail(w.streamerId, 'day')">{{ w.red }} <span class="weiji-pct">{{ getWeijiPct(w.red, w.total) }}%</span></div></div>
+                <div><div class="weiji-label">{{ $t('stats.red') }}</div><div class="weiji-val weiji-clickable" style="color:#DC2626" @click="openWeijiDetail(w.streamerId, 'day')">{{ w.red }} <span class="weiji-pct">{{ getWeijiPct(w.red, w.total) }}%</span></div></div>
               </div>
               <div class="weiji-stat">
                 <div class="weiji-dot green"></div>
-                <div><div class="weiji-label">有打赏+有互动</div><div class="weiji-val">{{ w.green }} <span class="weiji-pct">{{ getWeijiPct(w.green, w.total) }}%</span></div></div>
+                <div><div class="weiji-label">{{ $t('stats.green') }}</div><div class="weiji-val">{{ w.green }} <span class="weiji-pct">{{ getWeijiPct(w.green, w.total) }}%</span></div></div>
               </div>
               <div class="weiji-stat">
                 <div class="weiji-dot yellow"></div>
-                <div><div class="weiji-label">无打赏+有互动</div><div class="weiji-val">{{ w.yellow }} <span class="weiji-pct">{{ getWeijiPct(w.yellow, w.total) }}%</span></div></div>
+                <div><div class="weiji-label">{{ $t('stats.yellow') }}</div><div class="weiji-val">{{ w.yellow }} <span class="weiji-pct">{{ getWeijiPct(w.yellow, w.total) }}%</span></div></div>
               </div>
               <div class="weiji-stat">
                 <div class="weiji-dot orange"></div>
-                <div><div class="weiji-label">有建联+无互动</div><div class="weiji-val">{{ w.orange }} <span class="weiji-pct">{{ getWeijiPct(w.orange, w.total) }}%</span></div></div>
+                <div><div class="weiji-label">{{ $t('stats.orange') }}</div><div class="weiji-val">{{ w.orange }} <span class="weiji-pct">{{ getWeijiPct(w.orange, w.total) }}%</span></div></div>
               </div>
             </div>
           </div>
@@ -148,26 +148,26 @@
 
       <!-- 05 月维系情况 -->
       <section>
-        <div class="sec-title">05 · 月维系情况 <span style="font-size:12px;color:#99998F;font-weight:400">（月累计，仅统计打赏>1000，点击红色数字查看全部）</span></div>
+        <div class="sec-title">{{ $t('stats.section05') }} <span style="font-size:12px;color:#99998F;font-weight:400">（{{ $t('stats.weijiMonthTip') }}）</span></div>
         <div class="weiji-row" v-if="weijiMonthStatsData.length > 0">
           <div class="weiji-card" v-for="w in weijiMonthStatsData" :key="w.streamerId" :style="'--c:' + getStreamerColor(w.streamerId)">
             <div class="weiji-card-header">{{ w.stageName }}</div>
             <div class="weiji-stats">
               <div class="weiji-stat">
                 <div class="weiji-dot red"></div>
-                <div><div class="weiji-label">有打赏+无互动</div><div class="weiji-val weiji-clickable" style="color:#DC2626" @click="openWeijiDetail(w.streamerId, 'month')">{{ w.red }} <span class="weiji-pct">{{ getWeijiPct(w.red, w.total) }}%</span></div></div>
+                <div><div class="weiji-label">{{ $t('stats.red') }}</div><div class="weiji-val weiji-clickable" style="color:#DC2626" @click="openWeijiDetail(w.streamerId, 'month')">{{ w.red }} <span class="weiji-pct">{{ getWeijiPct(w.red, w.total) }}%</span></div></div>
               </div>
               <div class="weiji-stat">
                 <div class="weiji-dot green"></div>
-                <div><div class="weiji-label">有打赏+有互动</div><div class="weiji-val">{{ w.green }} <span class="weiji-pct">{{ getWeijiPct(w.green, w.total) }}%</span></div></div>
+                <div><div class="weiji-label">{{ $t('stats.green') }}</div><div class="weiji-val">{{ w.green }} <span class="weiji-pct">{{ getWeijiPct(w.green, w.total) }}%</span></div></div>
               </div>
               <div class="weiji-stat">
                 <div class="weiji-dot yellow"></div>
-                <div><div class="weiji-label">无打赏+有互动</div><div class="weiji-val">{{ w.yellow }} <span class="weiji-pct">{{ getWeijiPct(w.yellow, w.total) }}%</span></div></div>
+                <div><div class="weiji-label">{{ $t('stats.yellow') }}</div><div class="weiji-val">{{ w.yellow }} <span class="weiji-pct">{{ getWeijiPct(w.yellow, w.total) }}%</span></div></div>
               </div>
               <div class="weiji-stat">
                 <div class="weiji-dot orange"></div>
-                <div><div class="weiji-label">有建联+无互动</div><div class="weiji-val">{{ w.orange }} <span class="weiji-pct">{{ getWeijiPct(w.orange, w.total) }}%</span></div></div>
+                <div><div class="weiji-label">{{ $t('stats.orange') }}</div><div class="weiji-val">{{ w.orange }} <span class="weiji-pct">{{ getWeijiPct(w.orange, w.total) }}%</span></div></div>
               </div>
             </div>
           </div>
@@ -176,7 +176,7 @@
 
       <!-- 06 AI 运营分析 -->
       <section>
-        <div class="sec-title">06 · AI 运营分析</div>
+        <div class="sec-title">{{ $t('stats.section06') }}</div>
         <div class="ai-chat-row">
           <div class="ai-chat-card" v-for="item in adviceList" :key="item.streamerId" :style="'--c:' + getStreamerColor(item.streamerId)">
             <div class="ai-chat-header">
@@ -185,7 +185,7 @@
             </div>
             <div class="ai-chat-messages" :ref="el => { if (el) chatRefs[item.streamerId] = el }">
               <div v-if="!chatMessages[item.streamerId] || chatMessages[item.streamerId].length === 0" class="ai-msg ai-msg-ai" style="text-align:center;max-width:100%">
-                💬 在下方输入问题，开始 AI 分析
+                💬 {{ $t('stats.aiChatPlaceholder') }}
               </div>
               <template v-if="chatMessages[item.streamerId]">
                 <div v-for="(msg, idx) in chatMessages[item.streamerId]" :key="idx" :class="['ai-msg', msg.role === 'user' ? 'ai-msg-user' : 'ai-msg-ai']">
@@ -193,17 +193,17 @@
                 </div>
               </template>
               <div v-if="chatLoading[item.streamerId]" class="ai-msg ai-msg-ai ai-typing">
-                <div class="ai-msg-content">思考中...</div>
+                <div class="ai-msg-content">{{ $t('stats.thinking') }}</div>
               </div>
             </div>
             <div class="ai-chat-input">
               <input
                 type="text"
                 v-model="chatInputs[item.streamerId]"
-                placeholder="问点什么..."
+                :placeholder="$t('stats.chatPlaceholder')"
                 @keyup.enter="sendChat(item.streamerId)"
               />
-              <button @click="sendChat(item.streamerId)" :disabled="isChatLoading(item.streamerId)">发送</button>
+              <button @click="sendChat(item.streamerId)" :disabled="isChatLoading(item.streamerId)">{{ $t('stats.send') }}</button>
             </div>
           </div>
         </div>
@@ -215,14 +215,14 @@
       <div class="modal-box" @click.stop>
         <div class="modal-header">
           <div>
-            <div class="modal-title">中高级用户</div>
-            <div class="modal-sub">月累计送礼 ≥ 1,000 钻石 · 共 {{ highValueDialog.data.length }} 人</div>
+            <div class="modal-title">{{ $t('stats.highValueUsers') }}</div>
+            <div class="modal-sub">{{ $t('stats.highValueSub', { count: highValueDialog.data.length }) }}</div>
           </div>
           <button class="modal-close" @click="highValueDialog.open = false">&times;</button>
         </div>
         <div class="modal-body">
           <table>
-            <thead><tr><th>#</th><th>粉丝名称</th><th>标记</th><th>月累计送礼</th><th>活跃天数</th><th>最后活跃</th></tr></thead>
+            <thead><tr><th>#</th><th>{{ $t('stats.fanName') }}</th><th>{{ $t('stats.badge') }}</th><th>{{ $t('stats.monthlyGift') }}</th><th>{{ $t('stats.activeDays') }}</th><th>{{ $t('stats.lastActive') }}</th></tr></thead>
             <tbody>
               <tr v-for="(item, idx) in highValueDialog.data" :key="item.customerId">
                 <td class="mono">{{ idx + 1 }}</td>
@@ -244,13 +244,13 @@
         <div class="modal-header">
           <div>
             <div class="modal-title">{{ weijiDetailDialog.title }}</div>
-            <div class="modal-sub">共 {{ weijiDetailDialog.data.length }} 人</div>
+            <div class="modal-sub">{{ $t('stats.totalCount', { count: weijiDetailDialog.data.length }) }}</div>
           </div>
           <button class="modal-close" @click="weijiDetailDialog.open = false">&times;</button>
         </div>
         <div class="modal-body">
           <table>
-            <thead><tr><th>#</th><th>粉丝</th><th>标记</th><th>月打赏</th><th>红色天数</th><th>红色日期</th></tr></thead>
+            <thead><tr><th>#</th><th>{{ $t('stats.fan') }}</th><th>{{ $t('stats.badge') }}</th><th>{{ $t('stats.monthlyGift') }}</th><th>{{ $t('stats.redDays') }}</th><th>{{ $t('stats.redDates') }}</th></tr></thead>
             <tbody>
               <tr v-for="(item, idx) in weijiDetailDialog.data" :key="item.customerId">
                 <td class="mono">{{ idx + 1 }}</td>
@@ -271,14 +271,14 @@
       <div class="modal-box" @click.stop>
         <div class="modal-header">
           <div>
-            <div class="modal-title">新增打赏用户</div>
-            <div class="modal-sub">本月首次打赏 · 共 {{ newTippersDialog.data.length }} 人</div>
+            <div class="modal-title">{{ $t('stats.newTippers') }}</div>
+            <div class="modal-sub">{{ $t('stats.newTippersSub', { count: newTippersDialog.data.length }) }}</div>
           </div>
           <button class="modal-close" @click="newTippersDialog.open = false">&times;</button>
         </div>
         <div class="modal-body">
           <table>
-            <thead><tr><th>#</th><th>粉丝名称</th><th>标记</th><th>首笔打赏日</th><th>月累计打赏</th></tr></thead>
+            <thead><tr><th>#</th><th>{{ $t('stats.fanName') }}</th><th>{{ $t('stats.badge') }}</th><th>{{ $t('stats.firstTipDate') }}</th><th>{{ $t('stats.monthlyTip') }}</th></tr></thead>
             <tbody>
               <tr v-for="(item, idx) in newTippersDialog.data" :key="item.customerId">
                 <td class="mono">{{ idx + 1 }}</td>

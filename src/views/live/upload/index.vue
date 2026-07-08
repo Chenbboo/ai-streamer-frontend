@@ -2,17 +2,17 @@
   <div class="app-container live-upload-page">
     <!-- 每日提交 -->
     <el-card class="box-card" shadow="never">
-      <template #header><b>每日提交</b></template>
+      <template #header><b>{{ $t('upload.dailySubmit') }}</b></template>
       <el-form :model="form" label-width="90px" class="submit-form">
         <el-row :gutter="20">
           <el-col :xs="24" :sm="12" :md="8">
-            <el-form-item label="业务日期" required>
-              <el-date-picker v-model="form.bizDate" type="date" value-format="YYYY-MM-DD" placeholder="数据属于哪一天" style="width: 100%" />
+            <el-form-item :label="$t('upload.bizDate')" required>
+              <el-date-picker v-model="form.bizDate" type="date" value-format="YYYY-MM-DD" :placeholder="$t('upload.bizDatePlaceholder')" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12" :md="8">
-            <el-form-item label="主播" required>
-              <el-select v-if="streamers.length > 1" v-model="form.streamerId" placeholder="选择主播" style="width: 100%">
+            <el-form-item :label="$t('upload.streamer')" required>
+              <el-select v-if="streamers.length > 1" v-model="form.streamerId" :placeholder="$t('upload.selectStreamer')" style="width: 100%">
                 <el-option v-for="s in streamers" :key="s.streamerId" :label="s.stageName" :value="s.streamerId" />
               </el-select>
               <el-input v-else :model-value="streamers[0]?.stageName || ''" disabled style="width: 100%" />
@@ -21,26 +21,26 @@
         </el-row>
         <el-row :gutter="20">
           <el-col :xs="24" :md="12">
-            <el-form-item label="打赏榜截图">
+            <el-form-item :label="$t('upload.giftScreenshot')">
               <el-upload ref="giftUploadRef" v-model:file-list="giftFiles" :auto-upload="false" multiple accept="image/*" list-type="picture-card">
                 <el-icon><Plus /></el-icon>
               </el-upload>
             </el-form-item>
           </el-col>
           <el-col :xs="24" :md="12">
-            <el-form-item label="聊天截图">
+            <el-form-item :label="$t('upload.chatScreenshot')">
               <el-upload ref="chatUploadRef" v-model:file-list="chatFiles" :auto-upload="false" multiple accept="image/*" list-type="picture-card">
                 <el-icon><Plus /></el-icon>
               </el-upload>
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="工作汇报">
-          <el-input v-model="form.rawText" type="textarea" :rows="2" placeholder="如:Zhenzhen Ngày 1/7 Tổng 27079" />
+        <el-form-item :label="$t('upload.reportText')">
+          <el-input v-model="form.rawText" type="textarea" :rows="2" :placeholder="$t('upload.reportPlaceholder')" />
         </el-form-item>
         <el-form-item>
-          <el-button class="submit-button" type="primary" :loading="submitting" @click="handleSubmit">提 交</el-button>
-          <span class="tip">三项可分次提交,同一天自动归到一起</span>
+          <el-button class="submit-button" type="primary" :loading="submitting" @click="handleSubmit">{{ $t('upload.submit') }}</el-button>
+          <span class="tip">{{ $t('upload.submitTip') }}</span>
         </el-form-item>
       </el-form>
     </el-card>
@@ -48,44 +48,44 @@
     <!-- 查询 + 列表 -->
     <el-card class="box-card" shadow="never" style="margin-top: 12px">
       <el-form :model="query" inline class="query-form">
-        <el-form-item label="日期">
-          <el-date-picker v-model="dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="-" start-placeholder="开始" end-placeholder="结束" />
+        <el-form-item :label="$t('upload.date')">
+          <el-date-picker v-model="dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="-" :start-placeholder="$t('upload.startDate')" :end-placeholder="$t('upload.endDate')" />
         </el-form-item>
-        <el-form-item label="主播">
-          <el-select v-model="query.streamerId" placeholder="全部" clearable style="width: 160px">
+        <el-form-item :label="$t('upload.streamer')">
+          <el-select v-model="query.streamerId" :placeholder="$t('common.all')" clearable style="width: 160px">
             <el-option v-for="s in streamers" :key="s.streamerId" :label="s.stageName" :value="s.streamerId" />
           </el-select>
         </el-form-item>
-        <el-form-item label="类型" v-show="activeTab === 'detail'">
-          <el-select v-model="query.uploadType" placeholder="全部" clearable style="width: 140px">
+        <el-form-item :label="$t('upload.type')" v-show="activeTab === 'detail'">
+          <el-select v-model="query.uploadType" :placeholder="$t('common.all')" clearable style="width: 140px">
             <el-option v-for="t in typeOptions" :key="t.value" :label="t.label" :value="t.value" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+          <el-button type="primary" icon="Search" @click="handleQuery">{{ $t('common.search') }}</el-button>
+          <el-button icon="Refresh" @click="resetQuery">{{ $t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
       <el-tabs v-model="activeTab" @tab-change="handleQuery">
         <!-- 按日汇总 -->
-        <el-tab-pane label="按日汇总" name="daily">
+        <el-tab-pane :label="$t('upload.dailySummary')" name="daily">
           <el-table v-loading="loading" :data="dailyList" class="desktop-table">
-            <el-table-column label="日期" prop="bizDate" width="120" />
-            <el-table-column label="主播" prop="stageName" width="140" />
-            <el-table-column label="打赏榜截图" align="center">
+            <el-table-column :label="$t('upload.date')" prop="bizDate" width="120" />
+            <el-table-column :label="$t('upload.streamer')" prop="stageName" width="140" />
+            <el-table-column :label="$t('upload.giftScreenshot')" align="center">
               <template #default="{ row }">
-                <el-tag :type="row.giftCount > 0 ? 'success' : 'danger'">{{ row.giftCount > 0 ? row.giftCount + ' 张' : '未交' }}</el-tag>
+                <el-tag :type="row.giftCount > 0 ? 'success' : 'danger'">{{ row.giftCount > 0 ? row.giftCount + ' ' + $t('upload.pieces') : $t('upload.notSubmitted') }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="聊天截图" align="center">
+            <el-table-column :label="$t('upload.chatScreenshot')" align="center">
               <template #default="{ row }">
-                <el-tag :type="row.chatCount > 0 ? 'success' : 'danger'">{{ row.chatCount > 0 ? row.chatCount + ' 张' : '未交' }}</el-tag>
+                <el-tag :type="row.chatCount > 0 ? 'success' : 'danger'">{{ row.chatCount > 0 ? row.chatCount + ' ' + $t('upload.pieces') : $t('upload.notSubmitted') }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="工作汇报" align="center">
+            <el-table-column :label="$t('upload.reportText')" align="center">
               <template #default="{ row }">
-                <el-tag :type="row.reportCount > 0 ? 'success' : 'danger'">{{ row.reportCount > 0 ? '已交' : '未交' }}</el-tag>
+                <el-tag :type="row.reportCount > 0 ? 'success' : 'danger'">{{ row.reportCount > 0 ? $t('upload.submitted') : $t('upload.notSubmitted') }}</el-tag>
               </template>
             </el-table-column>
           </el-table>
@@ -98,40 +98,40 @@
                 </div>
               </div>
               <div class="record-tags">
-                <el-tag :type="row.giftCount > 0 ? 'success' : 'danger'">打赏榜 {{ row.giftCount > 0 ? row.giftCount + '张' : '未交' }}</el-tag>
-                <el-tag :type="row.chatCount > 0 ? 'success' : 'danger'">聊天 {{ row.chatCount > 0 ? row.chatCount + '张' : '未交' }}</el-tag>
-                <el-tag :type="row.reportCount > 0 ? 'success' : 'danger'">汇报 {{ row.reportCount > 0 ? '已交' : '未交' }}</el-tag>
+                <el-tag :type="row.giftCount > 0 ? 'success' : 'danger'">{{ $t('upload.gift') }} {{ row.giftCount > 0 ? row.giftCount + $t('upload.pieces') : $t('upload.notSubmitted') }}</el-tag>
+                <el-tag :type="row.chatCount > 0 ? 'success' : 'danger'">{{ $t('upload.chat') }} {{ row.chatCount > 0 ? row.chatCount + $t('upload.pieces') : $t('upload.notSubmitted') }}</el-tag>
+                <el-tag :type="row.reportCount > 0 ? 'success' : 'danger'">{{ $t('upload.report') }} {{ row.reportCount > 0 ? $t('upload.submitted') : $t('upload.notSubmitted') }}</el-tag>
               </div>
             </div>
-            <el-empty v-if="!loading && dailyList.length === 0" description="暂无提交记录" />
+            <el-empty v-if="!loading && dailyList.length === 0" :description="$t('upload.noRecords')" />
           </div>
           <pagination v-show="dailyTotal > 0" v-model:page="query.pageNum" v-model:limit="query.pageSize" :total="dailyTotal" @pagination="loadDaily" />
         </el-tab-pane>
 
         <!-- 明细 -->
-        <el-tab-pane label="明细列表" name="detail">
+        <el-tab-pane :label="$t('upload.detailList')" name="detail">
           <el-table v-loading="loading" :data="detailList" class="desktop-table">
-            <el-table-column label="内容" width="110" align="center">
+            <el-table-column :label="$t('upload.content')" width="110" align="center">
               <template #default="{ row }">
                 <el-image v-if="row.filePath" :src="baseApi + row.filePath" :preview-src-list="[baseApi + row.filePath]" preview-teleported fit="cover" style="width: 80px; height: 80px" />
                 <span v-else class="report-text">{{ row.rawText }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="日期" prop="bizDate" width="110" />
-            <el-table-column label="主播" prop="stageName" width="120" />
-            <el-table-column label="类型" width="110" align="center">
+            <el-table-column :label="$t('upload.date')" prop="bizDate" width="110" />
+            <el-table-column :label="$t('upload.streamer')" prop="stageName" width="120" />
+            <el-table-column :label="$t('upload.type')" width="110" align="center">
               <template #default="{ row }">{{ typeLabel(row.uploadType) }}</template>
             </el-table-column>
-            <el-table-column label="识别状态" width="110" align="center">
+            <el-table-column :label="$t('upload.recognizeStatus')" width="110" align="center">
               <template #default="{ row }">
                 <el-tag :type="statusTag(row.aiStatus)">{{ statusLabel(row.aiStatus) }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="上传人" prop="uploadByName" width="120" />
-            <el-table-column label="上传时间" prop="createTime" width="170" />
-            <el-table-column label="操作" width="90" align="center">
+            <el-table-column :label="$t('upload.uploader')" prop="uploadByName" width="120" />
+            <el-table-column :label="$t('upload.uploadTime')" prop="createTime" width="170" />
+            <el-table-column :label="$t('common.action')" width="90" align="center">
               <template #default="{ row }">
-                <el-button v-hasPermi="['live:upload:remove']" link type="danger" icon="Delete" @click="handleDelete(row)">删除</el-button>
+                <el-button v-hasPermi="['live:upload:remove']" link type="danger" icon="Delete" @click="handleDelete(row)">{{ $t('common.delete') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -139,7 +139,7 @@
             <div v-for="row in detailList" :key="row.uploadId" class="mobile-record">
               <div class="record-main">
                 <el-image v-if="row.filePath" :src="baseApi + row.filePath" :preview-src-list="[baseApi + row.filePath]" preview-teleported fit="cover" class="record-thumb" />
-                <div v-else class="record-text-thumb">汇报</div>
+                <div v-else class="record-text-thumb">{{ $t('upload.report') }}</div>
                 <div class="record-content">
                   <div class="record-title">{{ typeLabel(row.uploadType) }}</div>
                   <div class="record-subtitle">{{ row.stageName || '-' }} · {{ row.bizDate }}</div>
@@ -148,10 +148,10 @@
               </div>
               <div class="record-footer">
                 <el-tag :type="statusTag(row.aiStatus)">{{ statusLabel(row.aiStatus) }}</el-tag>
-                <el-button v-hasPermi="['live:upload:remove']" link type="danger" icon="Delete" @click="handleDelete(row)">删除</el-button>
+                <el-button v-hasPermi="['live:upload:remove']" link type="danger" icon="Delete" @click="handleDelete(row)">{{ $t('common.delete') }}</el-button>
               </div>
             </div>
-            <el-empty v-if="!loading && detailList.length === 0" description="暂无明细记录" />
+            <el-empty v-if="!loading && detailList.length === 0" :description="$t('upload.noDetailRecords')" />
           </div>
           <pagination v-show="detailTotal > 0" v-model:page="query.pageNum" v-model:limit="query.pageSize" :total="detailTotal" @pagination="loadDetail" />
         </el-tab-pane>

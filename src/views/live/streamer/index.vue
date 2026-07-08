@@ -1,43 +1,43 @@
 <template>
   <div class="app-container">
     <el-form :model="query" inline class="query-form">
-      <el-form-item label="主播名称">
-        <el-input v-model="query.stageName" placeholder="请输入主播名称" clearable style="width: 200px" />
+      <el-form-item :label="$t('streamer.stageName')">
+        <el-input v-model="query.stageName" :placeholder="$t('streamer.stageNamePlaceholder')" clearable style="width: 200px" />
       </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 120px">
-          <el-option label="在职" value="0" />
-          <el-option label="离职" value="1" />
+      <el-form-item :label="$t('common.status')">
+        <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 120px">
+          <el-option :label="$t('streamer.active')" value="0" />
+          <el-option :label="$t('streamer.inactive')" value="1" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        <el-button type="primary" icon="Search" @click="handleQuery">{{ $t('common.search') }}</el-button>
+        <el-button icon="Refresh" @click="resetQuery">{{ $t('common.reset') }}</el-button>
       </el-form-item>
     </el-form>
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['live:streamer:add']">新增主播</el-button>
+        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['live:streamer:add']">{{ $t('streamer.addStreamer') }}</el-button>
       </el-col>
     </el-row>
 
     <el-table v-loading="loading" :data="streamerList">
       <el-table-column label="ID" prop="streamerId" width="80" />
-      <el-table-column label="主播名称" prop="stageName" min-width="150" />
+      <el-table-column :label="$t('streamer.stageName')" prop="stageName" min-width="150" />
       <el-table-column label="TikTok" prop="tiktokHandle" min-width="150" />
-      <el-table-column label="状态" width="100" align="center">
+      <el-table-column :label="$t('common.status')" width="100" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.status === '0' ? 'success' : 'info'">{{ row.status === '0' ? '在职' : '离职' }}</el-tag>
+          <el-tag :type="row.status === '0' ? 'success' : 'info'">{{ row.status === '0' ? $t('streamer.active') : $t('streamer.inactive') }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" prop="createTime" width="180" />
-      <el-table-column label="备注" prop="remark" min-width="150" show-overflow-tooltip />
-      <el-table-column label="操作" width="200" align="center">
+      <el-table-column :label="$t('common.createTime')" prop="createTime" width="180" />
+      <el-table-column :label="$t('streamer.remark')" prop="remark" min-width="150" show-overflow-tooltip />
+      <el-table-column :label="$t('common.action')" width="200" align="center">
         <template #default="{ row }">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(row)" v-hasPermi="['live:streamer:edit']">修改</el-button>
-          <el-button link type="danger" icon="Delete" @click="handleDelete(row)" v-if="row.status === '0'" v-hasPermi="['live:streamer:remove']">删除</el-button>
-          <el-button link type="success" icon="Check" @click="handleEnable(row)" v-else v-hasPermi="['live:streamer:edit']">启用</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(row)" v-hasPermi="['live:streamer:edit']">{{ $t('common.edit') }}</el-button>
+          <el-button link type="danger" icon="Delete" @click="handleDelete(row)" v-if="row.status === '0'" v-hasPermi="['live:streamer:remove']">{{ $t('common.delete') }}</el-button>
+          <el-button link type="success" icon="Check" @click="handleEnable(row)" v-else v-hasPermi="['live:streamer:edit']">{{ $t('streamer.enable') }}</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -47,23 +47,23 @@
     <!-- 新增/编辑对话框 -->
     <el-dialog :title="dialog.title" v-model="dialog.open" width="500px" append-to-body>
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="主播名称" prop="stageName">
-          <el-input v-model="form.stageName" placeholder="如：Zhenzhen" />
+        <el-form-item :label="$t('streamer.stageName')" prop="stageName">
+          <el-input v-model="form.stageName" :placeholder="$t('streamer.stageNameExample')" />
         </el-form-item>
         <el-form-item label="TikTok" prop="tiktokHandle">
-          <el-input v-model="form.tiktokHandle" placeholder="如：@zhenzhen" />
+          <el-input v-model="form.tiktokHandle" :placeholder="$t('streamer.tiktokExample')" />
         </el-form-item>
-        <el-form-item label="登录密码" prop="password" v-if="!form.streamerId">
-          <el-input v-model="form.password" type="password" placeholder="至少6位" show-password />
-          <div class="el-form-item__tip">用于主播登录系统，自动创建账号并绑定主播角色</div>
+        <el-form-item :label="$t('streamer.password')" prop="password" v-if="!form.streamerId">
+          <el-input v-model="form.password" type="password" :placeholder="$t('streamer.passwordPlaceholder')" show-password />
+          <div class="el-form-item__tip">{{ $t('streamer.passwordTip') }}</div>
         </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="form.remark" type="textarea" :rows="3" placeholder="备注信息" />
+        <el-form-item :label="$t('streamer.remark')" prop="remark">
+          <el-input v-model="form.remark" type="textarea" :rows="3" :placeholder="$t('streamer.remarkPlaceholder')" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialog.open = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialog.open = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>

@@ -2,40 +2,40 @@
   <div class="app-container live-review-page">
     <el-card shadow="never">
       <el-form :model="query" inline>
-        <el-form-item label="日期">
+        <el-form-item :label="$t('review.date')">
           <el-date-picker
             v-model="dateRange"
             type="daterange"
             value-format="YYYY-MM-DD"
             range-separator="-"
-            start-placeholder="开始"
-            end-placeholder="结束"
+            :start-placeholder="$t('review.startDate')"
+            :end-placeholder="$t('review.endDate')"
           />
         </el-form-item>
-        <el-form-item label="主播">
-          <el-select v-model="query.streamerId" placeholder="全部" clearable style="width: 160px">
+        <el-form-item :label="$t('review.streamer')">
+          <el-select v-model="query.streamerId" :placeholder="$t('common.all')" clearable style="width: 160px">
             <el-option v-for="s in streamers" :key="s.streamerId" :label="s.stageName" :value="s.streamerId" />
           </el-select>
         </el-form-item>
-        <el-form-item label="类型">
-          <el-select v-model="query.uploadType" placeholder="全部" clearable style="width: 140px">
+        <el-form-item :label="$t('review.type')">
+          <el-select v-model="query.uploadType" :placeholder="$t('common.all')" clearable style="width: 140px">
             <el-option v-for="t in typeOptions" :key="t.value" :label="t.label" :value="t.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="query.aiStatus" placeholder="全部" clearable style="width: 140px">
+        <el-form-item :label="$t('review.status')">
+          <el-select v-model="query.aiStatus" :placeholder="$t('common.all')" clearable style="width: 140px">
             <el-option v-for="s in statusOptions" :key="s.value" :label="s.label" :value="s.value" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-          <el-button type="warning" icon="Connection" @click="openMergeDialog">合并客户</el-button>
+          <el-button type="primary" icon="Search" @click="handleQuery">{{ $t('common.search') }}</el-button>
+          <el-button icon="Refresh" @click="resetQuery">{{ $t('common.reset') }}</el-button>
+          <el-button type="warning" icon="Connection" @click="openMergeDialog">{{ $t('review.mergeCustomer') }}</el-button>
         </el-form-item>
       </el-form>
 
       <el-table v-loading="loading" :data="rows">
-        <el-table-column label="内容" width="110" align="center">
+        <el-table-column :label="$t('review.content')" width="110" align="center">
           <template #default="{ row }">
             <el-image
               v-if="row.filePath"
@@ -48,26 +48,26 @@
             <span v-else class="report-text">{{ row.rawText }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="日期" prop="bizDate" width="110" />
-        <el-table-column label="主播" prop="stageName" width="120" />
-        <el-table-column label="类型" width="120">
+        <el-table-column :label="$t('review.date')" prop="bizDate" width="110" />
+        <el-table-column :label="$t('review.streamer')" prop="stageName" width="120" />
+        <el-table-column :label="$t('review.type')" width="120">
           <template #default="{ row }">{{ typeLabel(row.uploadType) }}</template>
         </el-table-column>
-        <el-table-column label="识别状态" width="120" align="center">
+        <el-table-column :label="$t('review.recognizeStatus')" width="120" align="center">
           <template #default="{ row }">
             <el-tag v-if="row._recognizing" type="primary" effect="plain">
-              <el-icon class="is-loading" style="margin-right: 4px"><Loading /></el-icon>识别中
+              <el-icon class="is-loading" style="margin-right: 4px"><Loading /></el-icon>{{ $t('review.recognizing') }}
             </el-tag>
             <el-tag v-else :type="statusTag(row.aiStatus)">{{ statusLabel(row.aiStatus) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="识别摘要" min-width="260">
+        <el-table-column :label="$t('review.recognizeSummary')" min-width="260">
           <template #default="{ row }">
             <span v-if="row.aiResult">{{ resultSummary(row) }}</span>
-            <span v-else class="muted">未识别</span>
+            <span v-else class="muted">{{ $t('review.notRecognized') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="280" fixed="right">
+        <el-table-column :label="$t('common.action')" width="280" fixed="right">
           <template #default="{ row }">
             <el-button
               v-hasPermi="['live:review:edit']"
@@ -78,7 +78,7 @@
               :disabled="row.aiStatus === '2' || row.aiStatus === '4' || row._recognizing"
               @click="handleMock(row)"
             >
-              {{ row._recognizing ? '识别中...' : 'AI识别' }}
+              {{ row._recognizing ? $t('review.recognizing') + '...' : $t('review.aiRecognize') }}
             </el-button>
             <el-button
               v-hasPermi="['live:review:edit']"
@@ -88,7 +88,7 @@
               :disabled="!row.aiResult || row.aiStatus === '2'"
               @click="openEditor(row)"
             >
-              校正
+              {{ $t('review.correct') }}
             </el-button>
             <el-button
               v-hasPermi="['live:review:confirm']"
@@ -98,7 +98,7 @@
               :disabled="row.aiStatus !== '1'"
               @click="handleConfirm(row)"
             >
-              确认入库
+              {{ $t('review.confirm入库') }}
             </el-button>
           </template>
         </el-table-column>
@@ -107,7 +107,7 @@
       <pagination v-show="total > 0" v-model:page="query.pageNum" v-model:limit="query.pageSize" :total="total" @pagination="loadList" />
     </el-card>
 
-    <el-dialog v-model="editor.open" title="识别结果校正" width="860px" append-to-body>
+    <el-dialog v-model="editor.open" :title="$t('review.correctTitle')" width="860px" append-to-body>
       <div v-if="editor.row" class="editor-meta">
         <span>{{ editor.row.bizDate }}</span>
         <span>{{ editor.row.stageName }}</span>
@@ -116,64 +116,64 @@
 
       <template v-if="editor.form.type === 'gift'">
         <el-table :data="editor.form.items" border>
-          <el-table-column label="排名" width="90">
+          <el-table-column :label="$t('review.rank')" width="90">
             <template #default="{ row }">
               <el-input-number v-model="row.rankNo" :min="1" :controls="false" class="rank-input" />
             </template>
           </el-table-column>
-          <el-table-column label="客户昵称" min-width="180">
+          <el-table-column :label="$t('review.nickname')" min-width="180">
             <template #default="{ row }">
-              <el-input v-model="row.nickname" placeholder="客户昵称" />
+              <el-input v-model="row.nickname" :placeholder="$t('review.nicknamePlaceholder')" />
             </template>
           </el-table-column>
-          <el-table-column label="标记/徽章" min-width="140">
+          <el-table-column :label="$t('review.badge')" min-width="140">
             <template #default="{ row }">
-              <el-input v-model="row.badge" placeholder="可为空" />
+              <el-input v-model="row.badge" :placeholder="$t('review.badgePlaceholder')" />
             </template>
           </el-table-column>
-          <el-table-column label="虚拟币" width="140">
+          <el-table-column :label="$t('review.xu')" width="140">
             <template #default="{ row }">
               <el-input-number v-model="row.xu" :min="0" :controls="false" class="xu-input" />
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="80" align="center">
+          <el-table-column :label="$t('common.action')" width="80" align="center">
             <template #default="{ $index }">
-              <el-button link type="danger" icon="Delete" @click="removeItem($index)">删除</el-button>
+              <el-button link type="danger" icon="Delete" @click="removeItem($index)">{{ $t('common.delete') }}</el-button>
             </template>
           </el-table-column>
         </el-table>
-        <el-button class="add-row-btn" icon="Plus" @click="addItem">增加客户</el-button>
+        <el-button class="add-row-btn" icon="Plus" @click="addItem">{{ $t('review.addCustomer') }}</el-button>
       </template>
 
       <template v-else-if="editor.form.type === 'chat'">
         <div v-for="(item, idx) in editor.form.items" :key="idx" class="chat-customer-block">
           <div class="chat-customer-header">
-            <el-input v-model="item.nickname" placeholder="客户昵称" style="width: 220px" />
-            <el-input v-model="item.badge" placeholder="标记/徽章(可选)" style="width: 160px; margin-left: 8px" />
-            <el-button link type="danger" icon="Delete" style="margin-left: 8px" @click="removeItem(idx)">删除</el-button>
+            <el-input v-model="item.nickname" :placeholder="$t('review.nicknamePlaceholder')" style="width: 220px" />
+            <el-input v-model="item.badge" :placeholder="$t('review.badgeOptional')" style="width: 160px; margin-left: 8px" />
+            <el-button link type="danger" icon="Delete" style="margin-left: 8px" @click="removeItem(idx)">{{ $t('common.delete') }}</el-button>
           </div>
           <el-table :data="item.messages" border size="small" style="margin-top: 6px">
-            <el-table-column label="发送方" width="100">
+            <el-table-column :label="$t('review.sender')" width="100">
               <template #default="{ row: msg }">
                 <el-select v-model="msg.sender" size="small">
-                  <el-option label="客户" value="customer" />
-                  <el-option label="主播" value="streamer" />
+                  <el-option :label="$t('review.customer')" value="customer" />
+                  <el-option :label="$t('review.streamer')" value="streamer" />
                 </el-select>
               </template>
             </el-table-column>
-            <el-table-column label="类型" width="90">
+            <el-table-column :label="$t('review.msgType')" width="90">
               <template #default="{ row: msg }">
                 <el-select v-model="msg.messageType" size="small">
-                  <el-option label="文本" value="text" />
-                  <el-option label="视频" value="video" />
-                  <el-option label="图片" value="image" />
-                  <el-option label="语音" value="audio" />
+                  <el-option :label="$t('review.text')" value="text" />
+                  <el-option :label="$t('review.video')" value="video" />
+                  <el-option :label="$t('review.image')" value="image" />
+                  <el-option :label="$t('review.audio')" value="audio" />
                 </el-select>
               </template>
             </el-table-column>
-            <el-table-column label="消息内容">
+            <el-table-column :label="$t('review.msgContent')">
               <template #default="{ row: msg }">
-                <el-input v-model="msg.content" size="small" placeholder="聊天内容" />
+                <el-input v-model="msg.content" size="small" :placeholder="$t('review.chatContentPlaceholder')" />
               </template>
             </el-table-column>
             <el-table-column label="" width="60" align="center">
@@ -182,18 +182,18 @@
               </template>
             </el-table-column>
           </el-table>
-          <el-button link type="primary" icon="Plus" size="small" style="margin-top: 4px" @click="item.messages.push({ sender: 'customer', messageType: 'text', content: '' })">添加消息</el-button>
+          <el-button link type="primary" icon="Plus" size="small" style="margin-top: 4px" @click="item.messages.push({ sender: 'customer', messageType: 'text', content: '' })">{{ $t('review.addMessage') }}</el-button>
         </div>
-        <el-button class="add-row-btn" icon="Plus" @click="addItem">增加客户</el-button>
+        <el-button class="add-row-btn" icon="Plus" @click="addItem">{{ $t('review.addCustomer') }}</el-button>
       </template>
 
       <template v-else>
         <el-form label-width="90px">
-          <el-form-item label="总流水">
+          <el-form-item :label="$t('review.totalXu')">
             <el-input-number v-model="editor.form.totalXu" :min="0" :controls="false" class="report-xu-input" />
           </el-form-item>
-          <el-form-item label="汇报原文">
-            <el-input v-model="editor.form.rawText" type="textarea" :rows="5" placeholder="主播提交的汇报文字" />
+          <el-form-item :label="$t('review.rawText')">
+            <el-input v-model="editor.form.rawText" type="textarea" :rows="5" :placeholder="$t('review.rawTextPlaceholder')" />
           </el-form-item>
         </el-form>
       </template>
