@@ -9,7 +9,6 @@
     </template>
 
     <div class="right-menu">
-      <template v-if="appStore.device !== 'mobile'">
         <!-- 语言切换 -->
         <el-dropdown @command="handleLanguageChange" class="right-menu-item hover-effect language-switch">
           <span class="language-text">
@@ -54,7 +53,6 @@
         <el-tooltip content="消息通知" effect="dark" placement="bottom">
           <header-notice id="header-notice" class="right-menu-item hover-effect" />
         </el-tooltip>
-      </template>
 
       <el-dropdown @command="handleCommand" class="avatar-container right-menu-item hover-effect" trigger="hover">
         <div class="avatar-wrapper">
