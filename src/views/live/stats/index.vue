@@ -684,12 +684,19 @@ async function openWeijiDetail(streamerId, mode) {
   const stageName = streamer ? streamer.stageName : '未知'
   weijiDetailDialog.title = stageName + ' · 有打赏+无互动'
 
-  // 明细始终用月范围，保证"月累计送礼"准确
-  const today = new Date()
-  const end = new Date(today)
-  end.setDate(end.getDate() - 1)
-  let endDate = formatDate(end)
-  let beginDate = end.getFullYear() + '-' + String(end.getMonth() + 1).padStart(2, '0') + '-01'
+  let beginDate, endDate
+  if (mode === 'day') {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    beginDate = formatDate(yesterday)
+    endDate = beginDate
+  } else {
+    const today = new Date()
+    const end = new Date(today)
+    end.setDate(end.getDate() - 1)
+    endDate = formatDate(end)
+    beginDate = end.getFullYear() + '-' + String(end.getMonth() + 1).padStart(2, '0') + '-01'
+  }
 
   try {
     const res = await weijiDetail(streamerId, beginDate, endDate)
