@@ -467,8 +467,8 @@ function getForecastClass(card) {
 }
 
 function getConversionRate(item) {
-  if (!item.activeCustomers || item.activeCustomers === 0) return 0
-  return Math.round(item.highValueCustomers / item.activeCustomers * 100)
+  if (!item.chatCustomers || item.chatCustomers === 0) return 0
+  return Math.round(item.highValueCustomers / item.chatCustomers * 100)
 }
 
 async function loadData() {
